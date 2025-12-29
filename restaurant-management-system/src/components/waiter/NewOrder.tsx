@@ -1,0 +1,349 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import {
+  setTableNumber,
+  addItemToCurrentOrder,
+  removeItemFromCurrentOrder,
+  updateItemQuantity,
+  applyDiscount,
+} from "../../store/slices/orderSlice";
+import type { MenuItem, Discount } from "../../types";
+import { menuQueries, discountQueries } from "../../db/queries";
+
+const NewOrder = () => {
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { currentOrder } = useAppSelector((state) => state.order);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [discounts, setDiscounts] = useState<Discount[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [showCart, setShowCart] = useState(false);
+  const [showDiscountModal, setShowDiscountModal] = useState(false);
+  const [tableNumber, setTableNumberState] = useState("");
+
+  useEffect(() => {
+    loadMenu();
+    loadDiscounts();
+  }, []);
+
+  const loadMenu = async () => {
+    try {
+      const items = await menuQueries.getAvailable();
+      setMenuItems(items);
+    } catch (error) {
+      console.error("Error loading menu:", error);
+    }
+  };
+
+  const loadDiscounts = async () => {
+    try {
+      const activeDiscounts = await discountQueries.getActive();
+      setDiscounts(activeDiscounts);
+    } catch (error) {
+      console.error("Error loading discounts:", error);
+    }
+  };
+
+  const categories = [
+    "All",
+    ...Array.from(new Set(menuItems.map((item) => item.category_name))),
+  ];
+
+  const filteredItems =
+    selectedCategory === "All"
+      ? menuItems
+      : menuItems.filter((item) => item.category_name === selectedCategory);
+
+  const handleAddItem = (item: MenuItem) => {
+    dispatch(addItemToCurrentOrder({ menuItem: item, quantity: 1 }));
+  };
+
+  const handleSetTable = () => {
+    if (tableNumber) {
+      dispatch(setTableNumber(parseInt(tableNumber)));
+    }
+  };
+
+  const handleApplyDiscount = (discount: Discount) => {
+    dispatch(applyDiscount({ type: discount.type, value: discount.value }));
+    setShowDiscountModal(false);
+  };
+
+  const handleCheckout = () => {
+    if (!currentOrder.tableNumber) {
+      alert("Please select a table number");
+      return;
+    }
+
+    if (currentOrder.items.length === 0) {
+      alert("Please add items to the order");
+      return;
+    }
+
+    navigate("/waiter/checkout");
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-emerald-400 via-teal-400 to-cyan-500">
+      {/* Header */}
+      <header className="waiter-header sticky top-0 z-40">
+        <div className="px-4 py-5 flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => navigate("/waiter")}
+              className="text-white hover:text-gray-200 transition text-2xl font-bold"
+            >
+              ← Back
+            </button>
+            <h1 className="text-2xl md:text-3xl font-bold text-white">
+              🛒 New Order
+            </h1>
+          </div>
+          <button
+            onClick={() => setShowCart(true)}
+            className="btn-success relative"
+          >
+            🛒 Cart ({currentOrder.items.length})
+          </button>
+        </div>
+      </header>
+
+      <main className="px-4 py-6">
+        {/* Table Selection */}
+        {!currentOrder.tableNumber && (
+          <div className="card animate-slideInLeft mb-6">
+            <h2 className="text-2xl font-bold gradient-text mb-4">
+              🪑 Select Table Number
+            </h2>
+            <div className="flex space-x-3">
+              <input
+                type="number"
+                value={tableNumber}
+                onChange={(e) => setTableNumberState(e.target.value)}
+                placeholder="Enter table number"
+                className="form-input flex-1"
+              />
+              <button onClick={handleSetTable} className="btn-success">
+                ✓ Set Table
+              </button>
+            </div>
+          </div>
+        )}
+
+        {currentOrder.tableNumber && (
+          <div className="badge badge-success mb-6 block p-4 text-lg">
+            🪑 Table: {currentOrder.tableNumber}
+          </div>
+        )}
+
+        {/* Category Filter */}
+        <div className="mb-6 overflow-x-auto">
+          <div className="flex space-x-2 pb-2">
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category || "All")}
+                className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition ${
+                  selectedCategory === category
+                    ? "bg-blue-600 text-white"
+                    : "bg-white text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Menu Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {filteredItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => handleAddItem(item)}
+              className="menu-item-card group"
+            >
+              <div className="menu-item-icon">🍴</div>
+              <h3 className="font-bold text-gray-800 mb-1 text-sm md:text-base">
+                {item.name}
+              </h3>
+              <p className="text-xs text-gray-500 mb-3">{item.category_name}</p>
+              <div className="flex justify-between items-center">
+                <p className="text-lg font-bold text-green-600">
+                  ₹{item.price.toFixed(2)}
+                </p>
+                <span className="text-xl group-hover:scale-125 transition">
+                  ➕
+                </span>
+              </div>
+              {!item.available && (
+                <div className="menu-item-badge">Unavailable</div>
+              )}
+            </button>
+          ))}
+        </div>
+      </main>
+
+      {/* Cart Sidebar/Modal */}
+      {showCart && (
+        <div className="modal-backdrop">
+          <div className="cart-container open">
+            {/* Cart Header */}
+            <div className="cart-header">
+              <h2 className="text-2xl font-bold">🛒 Order Cart</h2>
+              <button
+                onClick={() => setShowCart(false)}
+                className="modal-close"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Cart Items */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {currentOrder.items.length === 0 ? (
+                <div className="text-center text-gray-400 mt-8">
+                  <div className="text-6xl mb-4">🛒</div>
+                  <p className="font-semibold">Your cart is empty</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {currentOrder.items.map((item) => (
+                    <div key={item.menu_item_id} className="cart-item group">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-semibold text-gray-800">
+                          🍴 {item.item_name}
+                        </h3>
+                        <button
+                          onClick={() =>
+                            dispatch(
+                              removeItemFromCurrentOrder(item.menu_item_id)
+                            )
+                          }
+                          className="text-red-600 hover:text-red-800 hover:bg-red-50 p-1 rounded transition"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() =>
+                              dispatch(
+                                updateItemQuantity({
+                                  menuItemId: item.menu_item_id,
+                                  quantity: Math.max(1, item.quantity - 1),
+                                })
+                              )
+                            }
+                            className="bg-red-400 hover:bg-red-500 text-white w-8 h-8 rounded-full font-bold"
+                          >
+                            −
+                          </button>
+                          <span className="font-semibold text-gray-800">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() =>
+                              dispatch(
+                                updateItemQuantity({
+                                  menuItemId: item.menu_item_id,
+                                  quantity: item.quantity + 1,
+                                })
+                              )
+                            }
+                            className="bg-green-400 hover:bg-green-500 text-white w-8 h-8 rounded-full font-bold"
+                          >
+                            +
+                          </button>
+                        </div>
+                        <span className="font-bold text-green-600">
+                          ₹{(item.price * item.quantity).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Cart Footer */}
+            <div className="cart-total">
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-gray-600">Subtotal:</span>
+                <span className="font-semibold">
+                  ₹{currentOrder.subtotal.toFixed(2)}
+                </span>
+              </div>
+              {currentOrder.discountAmount > 0 && (
+                <div className="flex justify-between text-sm text-red-600 mb-2">
+                  <span>Discount:</span>
+                  <span>-₹{currentOrder.discountAmount.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-lg font-bold border-t pt-3 mb-4">
+                <span>Total:</span>
+                <span className="gradient-text">
+                  ₹{currentOrder.totalPrice.toFixed(2)}
+                </span>
+              </div>
+              <button
+                onClick={() => setShowDiscountModal(true)}
+                className="btn-secondary w-full mb-2"
+              >
+                🎟️ Apply Discount
+              </button>
+              <button onClick={handleCheckout} className="btn-success w-full">
+                ✓ Proceed to Checkout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Discount Modal */}
+      {showDiscountModal && (
+        <div className="modal-backdrop">
+          <div className="modal-box">
+            <button
+              onClick={() => setShowDiscountModal(false)}
+              className="modal-close"
+            >
+              ✕
+            </button>
+            <h2 className="text-3xl font-bold gradient-text mb-6">
+              🎟️ Apply Discount
+            </h2>
+            <div className="space-y-3 mb-6">
+              {discounts.map((discount) => (
+                <button
+                  key={discount.id}
+                  onClick={() => handleApplyDiscount(discount)}
+                  className="card w-full text-left hover:border-indigo-500 border-2 border-transparent transition"
+                >
+                  <h3 className="font-bold text-gray-800 text-lg">
+                    {discount.name}
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {discount.type === "Percentage"
+                      ? `📊 ${discount.value}% Off`
+                      : `💰 $${discount.value} Off`}
+                  </p>
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowDiscountModal(false)}
+              className="btn-secondary w-full"
+            >
+              ✕ Close
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default NewOrder;
