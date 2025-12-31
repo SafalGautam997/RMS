@@ -1,11 +1,18 @@
 import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import getDB from "./db-connection.js";
+import { initDb } from "./db-init.js";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.SERVER_PORT || 3001;
+
+// Initialize database on startup
+initDb().catch((error) => {
+  console.error("Failed to initialize database:", error);
+  process.exit(1);
+});
 
 // Middleware
 app.use(express.json());
@@ -185,6 +192,21 @@ app.delete("/api/menu/:id", async (req: Request, res: Response) => {
   }
 });
 
+app.put("/api/menu/:id/stock", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { quantity } = req.body;
+    const db = await getDB();
+    const result = await db.run(
+      "UPDATE menu_items SET stock = MAX(0, stock - ?) WHERE id = ?",
+      [quantity, id]
+    );
+    res.json({ changes: result.changes });
+  } catch (error) {
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
 // ============= ORDER ROUTES =============
 
 app.get("/api/orders", async (req: Request, res: Response) => {
@@ -277,6 +299,17 @@ app.put("/api/orders/:id", async (req: Request, res: Response) => {
       "UPDATE orders SET subtotal = ?, discount_amount = ?, total_price = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
       [subtotal, discountAmount, totalPrice, id]
     );
+    res.json({ changes: result.changes });
+  } catch (error) {
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.delete("/api/orders/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const db = await getDB();
+    const result = await db.run("DELETE FROM orders WHERE id = ?", [id]);
     res.json({ changes: result.changes });
   } catch (error) {
     res.status(500).json({ error: "Database error" });
@@ -409,6 +442,31 @@ app.get("/api/transactions", async (req: Request, res: Response) => {
     res.status(500).json({ error: "Database error" });
   }
 });
+app.put("/api/transactions/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { amount, paymentMethod } = req.body;
+    const db = await getDB();
+    const result = await db.run(
+      "UPDATE transactions SET amount = ?, payment_method = ? WHERE id = ?",
+      [amount, paymentMethod, id]
+    );
+    res.json({ changes: result.changes });
+  } catch (error) {
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.delete("/api/transactions/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const db = await getDB();
+    const result = await db.run("DELETE FROM transactions WHERE id = ?", [id]);
+    res.json({ changes: result.changes });
+  } catch (error) {
+    res.status(500).json({ error: "Database error" });
+  }
+});
 
 app.post("/api/transactions", async (req: Request, res: Response) => {
   try {
@@ -435,6 +493,64 @@ app.get(
         [date]
       );
       res.json(row || { total: 0 });
+    } catch (error) {
+      res.status(500).json({ error: "Database error" });
+    }
+  }
+);
+
+app.get(
+  "/api/transactions/weekly-report/:startDate/:endDate",
+  async (req: Request, res: Response) => {
+    try {
+      const { startDate, endDate } = req.params;
+      const db = await getDB();
+      const rows = await db.all(
+        "SELECT * FROM transactions WHERE DATE(created_at) BETWEEN ? AND ? ORDER BY created_at",
+        [startDate, endDate]
+      );
+      res.json(rows);
+    } catch (error) {
+      res.status(500).json({ error: "Database error" });
+    }
+  }
+);
+
+app.get(
+  "/api/transactions/yearly-report/:year",
+  async (req: Request, res: Response) => {
+    try {
+      const { year } = req.params;
+      const db = await getDB();
+      const rows = await db.all(
+        "SELECT * FROM transactions WHERE strftime('%Y', created_at) = ? ORDER BY created_at",
+        [year]
+      );
+      res.json(rows);
+    } catch (error) {
+      res.status(500).json({ error: "Database error" });
+    }
+  }
+);
+
+app.get(
+  "/api/transactions/most-sold/:startDate/:endDate",
+  async (req: Request, res: Response) => {
+    try {
+      const { startDate, endDate } = req.params;
+      const db = await getDB();
+      const rows = await db.all(
+        `SELECT m.name, SUM(oi.quantity) as total_quantity, SUM(oi.quantity * oi.price) as total_revenue
+         FROM order_items oi
+         JOIN menu_items m ON oi.menu_item_id = m.id
+         JOIN orders o ON oi.order_id = o.id
+         WHERE DATE(o.created_at) BETWEEN ? AND ?
+         GROUP BY m.id, m.name
+         ORDER BY total_quantity DESC
+         LIMIT 5`,
+        [startDate, endDate]
+      );
+      res.json(rows);
     } catch (error) {
       res.status(500).json({ error: "Database error" });
     }

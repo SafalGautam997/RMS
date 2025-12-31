@@ -1,64 +1,104 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { clearCurrentOrder } from "../../store/slices/orderSlice";
 import {
   orderQueries,
   orderItemQueries,
   transactionQueries,
+  menuQueries,
 } from "../../db/queries";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BillPrint from "./BillPrint";
 
 const Checkout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { currentOrder } = useAppSelector((state) => state.order);
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [orderId, setOrderId] = useState<number | null>(null);
+  const [existingOrder, setExistingOrder] = useState<any>(null);
+
+  // Check if we're coming from pending orders (order ID passed via state)
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.orderId) {
+      setExistingOrder(state);
+      setOrderId(state.orderId);
+    }
+  }, [location.state]);
 
   const handlePayment = async () => {
-    if (!user || !currentOrder.tableNumber || currentOrder.items.length === 0) {
-      alert("Invalid order");
-      return;
-    }
-
     try {
-      // Create order
-      const orderResult = await orderQueries.create(
-        currentOrder.tableNumber,
-        user.id,
-        "Pending",
-        currentOrder.subtotal,
-        currentOrder.discountAmount,
-        currentOrder.totalPrice
-      );
+      if (existingOrder) {
+        // Payment for an existing pending order
+        const orderId = existingOrder.orderId;
 
-      const newOrderId = orderResult.lastID as number;
-
-      // Add order items
-      currentOrder.items.forEach((item) => {
-        orderItemQueries.create(
-          newOrderId,
-          item.menu_item_id,
-          item.quantity,
-          item.price
+        // Create transaction
+        await transactionQueries.create(
+          orderId,
+          existingOrder.totalPrice,
+          paymentMethod
         );
-      });
 
-      // Create transaction
-      transactionQueries.create(
-        newOrderId,
-        currentOrder.totalPrice,
-        paymentMethod
-      );
+        // Update order status to Paid
+        await orderQueries.updateStatus(orderId, "Paid");
 
-      // Update order status to Paid
-      orderQueries.updateStatus(newOrderId, "Paid");
+        // Update stock for all items in the order
+        const orderItems = await orderItemQueries.getByOrderId(orderId);
+        for (const item of orderItems) {
+          await menuQueries.updateStock(item.menu_item_id, item.quantity);
+        }
 
-      setOrderId(newOrderId);
-      setShowPrintModal(true);
+        setOrderId(orderId);
+        setShowPrintModal(true);
+      } else {
+        // New order checkout
+        if (
+          !user ||
+          !currentOrder.tableNumber ||
+          currentOrder.items.length === 0
+        ) {
+          alert("Invalid order");
+          return;
+        }
+
+        // Create order
+        const orderResult = await orderQueries.create(
+          currentOrder.tableNumber,
+          user.id,
+          "Paid",
+          currentOrder.subtotal,
+          currentOrder.discountAmount,
+          currentOrder.totalPrice
+        );
+
+        const newOrderId = orderResult.lastID as number;
+
+        // Add order items and update stock
+        for (const item of currentOrder.items) {
+          await orderItemQueries.create(
+            newOrderId,
+            item.menu_item_id,
+            item.quantity,
+            item.price
+          );
+          // Update stock after order is placed
+          await menuQueries.updateStock(item.menu_item_id, item.quantity);
+        }
+
+        // Create transaction
+        await transactionQueries.create(
+          newOrderId,
+          currentOrder.totalPrice,
+          paymentMethod
+        );
+
+        setOrderId(newOrderId);
+        setShowPrintModal(true);
+      }
     } catch (error) {
       console.error("Error processing payment:", error);
       alert("Error processing payment");
@@ -73,6 +113,53 @@ const Checkout = () => {
     dispatch(clearCurrentOrder());
     navigate("/waiter");
   };
+
+  // Show bill print view after payment
+  if (showPrintModal && orderId) {
+    const displayData = existingOrder || {
+      tableNumber: currentOrder.tableNumber,
+      items: currentOrder.items,
+      subtotal: currentOrder.subtotal,
+      discountAmount: currentOrder.discountAmount,
+      totalPrice: currentOrder.totalPrice,
+    };
+
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <div className="mb-6">
+              <BillPrint
+                orderId={orderId}
+                tableNumber={displayData.tableNumber}
+                waiterName={user?.name || ""}
+                items={displayData.items}
+                subtotal={displayData.subtotal}
+                discountAmount={displayData.discountAmount}
+                totalPrice={displayData.totalPrice}
+                paymentMethod={paymentMethod}
+              />
+            </div>
+
+            <div className="flex gap-3 mt-8 pt-6 border-t print:hidden">
+              <button
+                onClick={handlePrint}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg transition font-semibold"
+              >
+                🖨️ Print Bill
+              </button>
+              <button
+                onClick={handleFinish}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg transition font-semibold"
+              >
+                Finish
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -100,7 +187,8 @@ const Checkout = () => {
 
           <div className="mb-4">
             <p className="text-lg">
-              <strong>Table:</strong> {currentOrder.tableNumber}
+              <strong>Table:</strong>{" "}
+              {existingOrder?.tableNumber || currentOrder.tableNumber}
             </p>
             <p className="text-lg">
               <strong>Waiter:</strong> {user?.name}
@@ -110,7 +198,7 @@ const Checkout = () => {
           <div className="border-t pt-4 mb-4">
             <h3 className="font-bold text-lg mb-3">Items:</h3>
             <div className="space-y-2">
-              {currentOrder.items.map((item) => (
+              {(existingOrder?.items || currentOrder.items).map((item: any) => (
                 <div key={item.menu_item_id} className="flex justify-between">
                   <span>
                     {item.item_name} x {item.quantity}
@@ -126,16 +214,26 @@ const Checkout = () => {
           <div className="border-t pt-4 space-y-2">
             <div className="flex justify-between">
               <span>Subtotal:</span>
-              <span>₹{currentOrder.subtotal.toFixed(2)}</span>
+              <span>
+                ₹{(existingOrder?.subtotal || currentOrder.subtotal).toFixed(2)}
+              </span>
             </div>
             <div className="flex justify-between text-red-600">
               <span>Discount:</span>
-              <span>-₹{currentOrder.discountAmount.toFixed(2)}</span>
+              <span>
+                -₹
+                {(
+                  existingOrder?.discountAmount || currentOrder.discountAmount
+                ).toFixed(2)}
+              </span>
             </div>
             <div className="flex justify-between text-2xl font-bold">
               <span>Total:</span>
               <span className="text-green-600">
-                ₹{currentOrder.totalPrice.toFixed(2)}
+                ₹
+                {(existingOrder?.totalPrice || currentOrder.totalPrice).toFixed(
+                  2
+                )}
               </span>
             </div>
           </div>
@@ -169,52 +267,6 @@ const Checkout = () => {
           </button>
         </div>
       </main>
-
-      {/* Print Modal */}
-      {showPrintModal && orderId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-            <div className="text-center mb-6">
-              <div className="text-6xl mb-4">✅</div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                Payment Successful!
-              </h2>
-              <p className="text-gray-600">
-                Order #{orderId} has been completed
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <button
-                onClick={handlePrint}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg transition font-semibold"
-              >
-                🖨️ Print Bill
-              </button>
-              <button
-                onClick={handleFinish}
-                className="w-full bg-gray-300 hover:bg-gray-400 text-gray-800 py-3 rounded-lg transition font-semibold"
-              >
-                Finish
-              </button>
-            </div>
-
-            {/* Hidden bill for printing */}
-            <div className="hidden print:block">
-              <BillPrint
-                orderId={orderId}
-                tableNumber={currentOrder.tableNumber!}
-                waiterName={user?.name || ""}
-                items={currentOrder.items}
-                subtotal={currentOrder.subtotal}
-                discountAmount={currentOrder.discountAmount}
-                totalPrice={currentOrder.totalPrice}
-                paymentMethod={paymentMethod}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

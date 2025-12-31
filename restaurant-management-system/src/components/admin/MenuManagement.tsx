@@ -19,6 +19,10 @@ const MenuManagement = () => {
 
   useEffect(() => {
     loadData();
+
+    // Reload menu items every 3 seconds to reflect stock changes
+    const interval = setInterval(loadData, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadData = async () => {
@@ -32,11 +36,11 @@ const MenuManagement = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       if (editingItem) {
-        menuQueries.update(
+        await menuQueries.update(
           editingItem.id,
           formData.name,
           parseFloat(formData.price),
@@ -45,7 +49,7 @@ const MenuManagement = () => {
           formData.available
         );
       } else {
-        menuQueries.create(
+        await menuQueries.create(
           formData.name,
           parseFloat(formData.price),
           parseInt(formData.category_id),
@@ -53,9 +57,7 @@ const MenuManagement = () => {
         );
       }
       resetForm();
-      setTimeout(() => {
-        loadData();
-      }, 100);
+      await loadData();
     } catch (error) {
       console.error("Error saving menu item:", error);
       alert("Error saving menu item. Please try again.");
@@ -74,13 +76,11 @@ const MenuManagement = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (confirm("Are you sure you want to delete this item?")) {
       try {
-        menuQueries.delete(id);
-        setTimeout(() => {
-          loadData();
-        }, 100);
+        await menuQueries.delete(id);
+        await loadData();
       } catch (error) {
         console.error("Error deleting item:", error);
         alert("Error deleting item. Please try again.");

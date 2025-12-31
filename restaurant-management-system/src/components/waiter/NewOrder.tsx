@@ -7,14 +7,21 @@ import {
   removeItemFromCurrentOrder,
   updateItemQuantity,
   applyDiscount,
+  clearCurrentOrder,
 } from "../../store/slices/orderSlice";
 import type { MenuItem, Discount } from "../../types";
-import { menuQueries, discountQueries } from "../../db/queries";
+import {
+  menuQueries,
+  discountQueries,
+  orderQueries,
+  orderItemQueries,
+} from "../../db/queries";
 
 const NewOrder = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { currentOrder } = useAppSelector((state) => state.order);
+  const { user } = useAppSelector((state) => state.auth);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [discounts, setDiscounts] = useState<Discount[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
@@ -70,7 +77,7 @@ const NewOrder = () => {
     setShowDiscountModal(false);
   };
 
-  const handleCheckout = () => {
+  const handleConfirmOrder = async () => {
     if (!currentOrder.tableNumber) {
       alert("Please select a table number");
       return;
@@ -81,7 +88,42 @@ const NewOrder = () => {
       return;
     }
 
-    navigate("/waiter/checkout");
+    try {
+      if (!user) {
+        alert("User not found");
+        return;
+      }
+
+      // Create order with Pending status
+      const orderResult = await orderQueries.create(
+        currentOrder.tableNumber,
+        user.id,
+        "Pending",
+        currentOrder.subtotal,
+        currentOrder.discountAmount,
+        currentOrder.totalPrice
+      );
+
+      const newOrderId = orderResult.lastID as number;
+
+      // Add order items
+      for (const item of currentOrder.items) {
+        await orderItemQueries.create(
+          newOrderId,
+          item.menu_item_id,
+          item.quantity,
+          item.price
+        );
+      }
+
+      alert("Order confirmed! It's now in Pending Orders.");
+      setShowCart(false);
+      dispatch(clearCurrentOrder());
+      navigate("/waiter/pending");
+    } catch (error) {
+      console.error("Error confirming order:", error);
+      alert("Error confirming order");
+    }
   };
 
   return (
@@ -158,30 +200,76 @@ const NewOrder = () => {
 
         {/* Menu Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filteredItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => handleAddItem(item)}
-              className="menu-item-card group"
-            >
-              <div className="menu-item-icon">🍴</div>
-              <h3 className="font-bold text-gray-800 mb-1 text-sm md:text-base">
-                {item.name}
-              </h3>
-              <p className="text-xs text-gray-500 mb-3">{item.category_name}</p>
-              <div className="flex justify-between items-center">
-                <p className="text-lg font-bold text-green-600">
-                  ₹{item.price.toFixed(2)}
-                </p>
-                <span className="text-xl group-hover:scale-125 transition">
-                  ➕
-                </span>
+          {filteredItems.map((item: MenuItem) => {
+            const cartItem = currentOrder.items.find(
+              (ci: any): boolean => ci.menu_item_id === item.id
+            );
+            return (
+              <div
+                key={item.id}
+                className="menu-item-card group relative flex flex-col"
+              >
+                <button
+                  onClick={() => handleAddItem(item)}
+                  className="flex-1 flex flex-col"
+                >
+                  <div className="menu-item-icon">🍴</div>
+                  <h3 className="font-bold text-gray-800 mb-1 text-sm md:text-base">
+                    {item.name}
+                  </h3>
+                  <p className="text-xs text-gray-500 mb-3">
+                    {item.category_name}
+                  </p>
+                  <div className="flex justify-between items-center">
+                    <p className="text-lg font-bold text-green-600">
+                      ₹{item.price.toFixed(2)}
+                    </p>
+                    <span className="text-xl group-hover:scale-125 transition">
+                      ➕
+                    </span>
+                  </div>
+                  {!item.available && (
+                    <div className="menu-item-badge">Unavailable</div>
+                  )}
+                </button>
+                {cartItem && cartItem.quantity > 0 && (
+                  <div className="border-t pt-2 mt-2 flex items-center justify-between gap-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        dispatch(
+                          updateItemQuantity({
+                            menuItemId: item.id,
+                            quantity: Math.max(1, cartItem.quantity - 1),
+                          })
+                        );
+                      }}
+                      className="bg-red-400 hover:bg-red-500 text-white w-6 h-6 rounded flex items-center justify-center font-bold text-sm"
+                    >
+                      −
+                    </button>
+                    <span className="font-bold text-gray-800 text-sm min-w-4 text-center">
+                      {cartItem.quantity}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        dispatch(
+                          updateItemQuantity({
+                            menuItemId: item.id,
+                            quantity: cartItem.quantity + 1,
+                          })
+                        );
+                      }}
+                      className="bg-green-400 hover:bg-green-500 text-white w-6 h-6 rounded flex items-center justify-center font-bold text-sm"
+                    >
+                      +
+                    </button>
+                  </div>
+                )}
               </div>
-              {!item.available && (
-                <div className="menu-item-badge">Unavailable</div>
-              )}
-            </button>
-          ))}
+            );
+          })}
         </div>
       </main>
 
@@ -201,7 +289,7 @@ const NewOrder = () => {
             </div>
 
             {/* Cart Items */}
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="cart-items-scroll">
               {currentOrder.items.length === 0 ? (
                 <div className="text-center text-gray-400 mt-8">
                   <div className="text-6xl mb-4">🛒</div>
@@ -209,7 +297,7 @@ const NewOrder = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {currentOrder.items.map((item) => (
+                  {currentOrder.items.map((item: any) => (
                     <div key={item.menu_item_id} className="cart-item group">
                       <div className="flex justify-between items-start mb-2">
                         <h3 className="font-semibold text-gray-800">
@@ -294,7 +382,26 @@ const NewOrder = () => {
               >
                 🎟️ Apply Discount
               </button>
-              <button onClick={handleCheckout} className="btn-success w-full">
+              <button
+                onClick={handleConfirmOrder}
+                className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg w-full transition mb-2"
+              >
+                ⏳ Confirm Order (Pending)
+              </button>
+              <button
+                onClick={() => {
+                  if (!currentOrder.tableNumber) {
+                    alert("Please select a table number");
+                    return;
+                  }
+                  if (currentOrder.items.length === 0) {
+                    alert("Please add items to the order");
+                    return;
+                  }
+                  navigate("/waiter/checkout");
+                }}
+                className="btn-success w-full"
+              >
                 ✓ Proceed to Checkout
               </button>
             </div>

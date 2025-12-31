@@ -1,24 +1,12 @@
-import { open } from "sqlite";
-import sqlite3 from "sqlite3";
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
+import getDB from "./db-connection.js";
 
-dotenv.config();
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dbPath = process.env.SQLITE_PATH || path.join(__dirname, "restaurant.db");
-
-async function initializeDatabase() {
+export async function initDb() {
   let db;
   try {
-    // Open SQLite database
-    db = await open({
-      filename: dbPath,
-      driver: sqlite3.Database,
-    });
+    // Get database connection
+    db = await getDB();
 
-    console.log(`Connected to SQLite database at ${dbPath}`);
+    console.log(`✓ Connected to SQLite database`);
 
     // Enable foreign keys
     await db.exec("PRAGMA foreign_keys = ON");
@@ -226,18 +214,16 @@ async function initializeDatabase() {
     }
 
     console.log("\n✅ Database initialization completed successfully!");
-    console.log(`Database file: ${dbPath}`);
   } catch (error) {
     console.error(
       "❌ Database initialization failed:",
       (error as Error).message
     );
     process.exit(1);
-  } finally {
-    if (db) {
-      await db.close();
-    }
   }
 }
 
-initializeDatabase();
+// Only run initialization if this file is executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  initDb();
+}

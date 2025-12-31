@@ -1,3 +1,5 @@
+import { formatNepaliDateTime } from "../../utils/timeUtils";
+
 interface BillPrintProps {
   orderId: number;
   tableNumber: number;
@@ -19,7 +21,7 @@ const BillPrint = ({
   totalPrice,
   paymentMethod,
 }: BillPrintProps) => {
-  const currentDate = new Date().toLocaleString();
+  const currentDate = formatNepaliDateTime();
 
   return (
     <div className="print:block max-w-xs mx-auto p-4 font-mono text-sm">
@@ -92,7 +94,7 @@ const BillPrint = ({
 
       <div className="text-center text-xs">
         <p>Please visit us again!</p>
-        <p className="mt-2">www.restaurant.com</p>
+        <p className="mt-2">www.irani.com</p>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { logout } from "../../store/slices/authSlice";
 import { orderQueries, transactionQueries } from "../../db/queries";
+import { getNepaliDateTime } from "../../utils/timeUtils";
 
 const AdminDashboard = () => {
   const dispatch = useAppDispatch();
@@ -29,21 +30,48 @@ const AdminDashboard = () => {
   const loadStats = async () => {
     try {
       const orders = await orderQueries.getAll();
-      const today = new Date().toISOString().split("T")[0];
-      const month = new Date().getMonth() + 1;
-      const year = new Date().getFullYear();
+      const nepaliDate = getNepaliDateTime();
+      const today = nepaliDate.toISOString().split("T")[0];
+      const month = nepaliDate.getMonth() + 1;
+      const year = nepaliDate.getFullYear();
 
-      const todaySalesData = await transactionQueries.getDailySales(today);
-      const monthlySalesData = await transactionQueries.getMonthlySales(
-        year,
-        month
+      // Get daily sales using the same approach as Reports page
+      let todaySalesTransactions = await transactionQueries.getDailyReport(
+        today
+      );
+      let todaySalesAmount = todaySalesTransactions.reduce(
+        (sum: number, t: any) => sum + (t.amount || 0),
+        0
+      );
+
+      // If no sales for Nepal date, also check with current UTC date as fallback
+      if (todaySalesAmount === 0) {
+        const utcToday = new Date().toISOString().split("T")[0];
+        const utcTransactions = await transactionQueries.getDailyReport(
+          utcToday
+        );
+        todaySalesAmount = utcTransactions.reduce(
+          (sum: number, t: any) => sum + (t.amount || 0),
+          0
+        );
+      }
+
+      // Get monthly sales using the same approach as Reports page
+      const monthlySalesTransactions =
+        await transactionQueries.getMonthlyReport(
+          year.toString(),
+          month.toString().padStart(2, "0")
+        );
+      const monthlySalesAmount = monthlySalesTransactions.reduce(
+        (sum: number, t: any) => sum + (t.amount || 0),
+        0
       );
 
       setStats({
         totalOrders: orders.length,
         pendingOrders: orders.filter((o: any) => o.status === "Pending").length,
-        todaySales: todaySalesData?.total || 0,
-        monthlySales: monthlySalesData?.total || 0,
+        todaySales: todaySalesAmount || 0,
+        monthlySales: monthlySalesAmount || 0,
       });
     } catch (error) {
       console.error("Error loading stats:", error);

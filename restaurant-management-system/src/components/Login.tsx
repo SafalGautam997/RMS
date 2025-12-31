@@ -18,13 +18,14 @@ const Login = () => {
     try {
       const user = await userQueries.login(username, password);
 
-      if (user) {
+      // Check if user exists and has an id (valid login)
+      if (user && user.id) {
         dispatch(login(user));
 
         // Navigate based on role
         if (user.role === "Admin") {
           navigate("/admin");
-        } else {
+        } else if (user.role === "Waiter") {
           navigate("/waiter");
         }
       } else {
