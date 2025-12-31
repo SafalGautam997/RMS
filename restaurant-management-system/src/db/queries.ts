@@ -344,7 +344,9 @@ export const transactionQueries = {
   },
 
   getDailyReport: async (date: string) => {
-    const response = await fetch(`${API_URL}/transactions/daily-sales/${date}`);
+    const response = await fetch(
+      `${API_URL}/transactions/daily-report/${date}`
+    );
     if (!response.ok) throw new Error("Failed to fetch daily report");
     return await response.json();
   },
@@ -359,7 +361,7 @@ export const transactionQueries = {
 
   getMonthlyReport: async (year: string, month: string) => {
     const response = await fetch(
-      `${API_URL}/transactions/monthly-sales/${year}/${month}`
+      `${API_URL}/transactions/monthly-report/${year}/${month}`
     );
     if (!response.ok) throw new Error("Failed to fetch monthly report");
     return await response.json();

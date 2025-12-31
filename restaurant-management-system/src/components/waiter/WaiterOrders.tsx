@@ -105,7 +105,7 @@ const WaiterOrders = () => {
               </div>
 
               <div className="text-xs text-gray-500 border-t pt-2">
-                <p>{new Date(order.created_at).toLocaleString()}</p>
+                <p>{formatNepaliDateTime(new Date(order.created_at))}</p>
               </div>
             </div>
           ))}

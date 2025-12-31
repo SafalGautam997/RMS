@@ -500,6 +500,23 @@ app.get(
 );
 
 app.get(
+  "/api/transactions/daily-report/:date",
+  async (req: Request, res: Response) => {
+    try {
+      const { date } = req.params;
+      const db = await getDB();
+      const rows = await db.all(
+        "SELECT * FROM transactions WHERE DATE(created_at) = ? ORDER BY created_at",
+        [date]
+      );
+      res.json(rows);
+    } catch (error) {
+      res.status(500).json({ error: "Database error" });
+    }
+  }
+);
+
+app.get(
   "/api/transactions/weekly-report/:startDate/:endDate",
   async (req: Request, res: Response) => {
     try {
@@ -568,6 +585,23 @@ app.get(
         [year, month.padStart(2, "0")]
       );
       res.json(row || { total: 0 });
+    } catch (error) {
+      res.status(500).json({ error: "Database error" });
+    }
+  }
+);
+
+app.get(
+  "/api/transactions/monthly-report/:year/:month",
+  async (req: Request, res: Response) => {
+    try {
+      const { year, month } = req.params;
+      const db = await getDB();
+      const rows = await db.all(
+        "SELECT * FROM transactions WHERE strftime('%Y', created_at) = ? AND strftime('%m', created_at) = ? ORDER BY created_at",
+        [year, month.padStart(2, "0")]
+      );
+      res.json(rows);
     } catch (error) {
       res.status(500).json({ error: "Database error" });
     }

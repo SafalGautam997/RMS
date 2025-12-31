@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { transactionQueries } from "../../db/queries";
+import { formatNepaliDateTime } from "../../utils/timeUtils";
 
 const Reports = () => {
   const navigate = useNavigate();
@@ -265,21 +266,24 @@ const Reports = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {topProducts.map((product: any, index: number) => (
-                    <tr key={product.id} className="hover:bg-gray-50">
+                    <tr key={index} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
                         #{index + 1}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {product.product_name}
+                        {product.name}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {product.total_quantity} units
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
-                        ₹{product.total_sales.toFixed(2)}
+                        ₹
+                        {product.total_revenue
+                          ? product.total_revenue.toFixed(2)
+                          : "0.00"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {product.order_count}
+                        N/A
                       </td>
                     </tr>
                   ))}
@@ -320,6 +324,9 @@ const Reports = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Payment Method
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Time
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -339,6 +346,9 @@ const Reports = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {transaction.payment_method}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {formatNepaliDateTime(new Date(transaction.created_at))}
                       </td>
                     </tr>
                   ))}

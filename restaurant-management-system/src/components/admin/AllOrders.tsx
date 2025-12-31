@@ -106,7 +106,7 @@ const AllOrders = () => {
             <h1 className="text-2xl font-bold text-gray-800">All Orders</h1>
           </div>
           <div className="flex space-x-2">
-            {["All", "Pending", "Served", "Paid", "Cancelled"].map((status) => (
+            {["All", "Pending", "Served", "Paid"].map((status) => (
               <button
                 key={status}
                 onClick={() => setFilter(status)}
