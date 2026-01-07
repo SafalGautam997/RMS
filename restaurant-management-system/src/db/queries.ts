@@ -2,11 +2,11 @@ const API_URL = "http://localhost:3001/api";
 
 // User queries
 export const userQueries = {
-  login: async (username: string, password: string) => {
+  login: async (username: string, password: string, party: string) => {
     const response = await fetch(`${API_URL}/users/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ username, password, party }),
     });
     if (!response.ok) throw new Error("Login failed");
     return await response.json();
@@ -22,12 +22,13 @@ export const userQueries = {
     name: string,
     username: string,
     password: string,
-    role: string
+    role: string,
+    party: string
   ) => {
     const response = await fetch(`${API_URL}/users`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, username, password, role }),
+      body: JSON.stringify({ name, username, password, role, party }),
     });
     if (!response.ok) throw new Error("Failed to create user");
     return await response.json();
@@ -87,12 +88,21 @@ export const menuQueries = {
     name: string,
     price: number,
     categoryId: number,
-    stock: number
+    stock: number,
+    imageUrl?: string
   ) => {
+    console.log("menuQueries.create called with:", {
+      name,
+      price,
+      categoryId,
+      stock,
+      hasImage: !!imageUrl,
+      imageUrlLength: imageUrl?.length,
+    });
     const response = await fetch(`${API_URL}/menu`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, price, categoryId, stock }),
+      body: JSON.stringify({ name, price, categoryId, stock, imageUrl }),
     });
     if (!response.ok) throw new Error("Failed to create menu item");
     return await response.json();
@@ -104,12 +114,20 @@ export const menuQueries = {
     price: number,
     categoryId: number,
     stock: number,
-    available: number
+    available: number,
+    imageUrl?: string
   ) => {
     const response = await fetch(`${API_URL}/menu/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, price, categoryId, stock, available }),
+      body: JSON.stringify({
+        name,
+        price,
+        categoryId,
+        stock,
+        available,
+        imageUrl,
+      }),
     });
     if (!response.ok) throw new Error("Failed to update menu item");
     return await response.json();

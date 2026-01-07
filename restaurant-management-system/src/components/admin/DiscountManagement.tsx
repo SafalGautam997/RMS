@@ -2,6 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Discount } from "../../types";
 import { discountQueries } from "../../db/queries";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faArrowLeft,
+  faPercent,
+  faPenToSquare,
+  faPlus,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
 
 const DiscountManagement = () => {
   const navigate = useNavigate();
@@ -87,47 +95,52 @@ const DiscountManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow-md">
+    <div className="min-h-screen">
+      <header className="header-main">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <button
               onClick={() => navigate("/admin")}
-              className="text-gray-600 hover:text-gray-800"
+              className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-xl transition font-semibold flex items-center gap-2"
             >
-              ← Back
+              <FontAwesomeIcon icon={faArrowLeft} />
+              <span>Back</span>
             </button>
-            <h1 className="text-2xl font-bold text-gray-800">
+            <h1 className="text-2xl font-bold text-white">
+              <span className="mr-2">
+                <FontAwesomeIcon icon={faPercent} />
+              </span>
               Discount Management
             </h1>
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition"
+            className="btn-primary px-6 py-2.5 rounded-xl transition font-semibold flex items-center gap-2"
           >
-            + Add Discount
+            <FontAwesomeIcon icon={faPlus} />
+            <span>Add Discount</span>
           </button>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="table-container overflow-hidden">
+          <table className="table-modern min-w-full divide-y divide-gray-200">
+            <thead>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
                   Name
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
                   Type
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
                   Value
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -148,11 +161,9 @@ const DiscountManagement = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        discount.active
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
+                      className={`badge ${
+                        discount.active ? "badge-success" : "badge-warning"
+                      } px-3 py-1 rounded-full text-xs inline-flex`}
                     >
                       {discount.active ? "Active" : "Inactive"}
                     </span>
@@ -160,15 +171,17 @@ const DiscountManagement = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                     <button
                       onClick={() => handleEdit(discount)}
-                      className="text-blue-600 hover:text-blue-900"
+                      className="text-blue-700 hover:text-blue-900 inline-flex items-center gap-2"
                     >
-                      Edit
+                      <FontAwesomeIcon icon={faPenToSquare} />
+                      <span>Edit</span>
                     </button>
                     <button
                       onClick={() => handleDelete(discount.id)}
-                      className="text-red-600 hover:text-red-900"
+                      className="text-red-600 hover:text-red-900 inline-flex items-center gap-2"
                     >
-                      Delete
+                      <FontAwesomeIcon icon={faTrash} />
+                      <span>Delete</span>
                     </button>
                   </td>
                 </tr>
@@ -180,8 +193,8 @@ const DiscountManagement = () => {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 modal-backdrop flex items-center justify-center p-4 z-50">
+          <div className="modal-box rounded-lg p-6 w-full max-w-md">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
               {editingDiscount ? "Edit Discount" : "Add Discount"}
             </h2>
@@ -196,7 +209,7 @@ const DiscountManagement = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="form-input w-full px-3 py-2 rounded-lg outline-none"
                   required
                 />
               </div>
@@ -212,7 +225,7 @@ const DiscountManagement = () => {
                       type: e.target.value as "Percentage" | "Fixed",
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="form-select w-full px-3 py-2 rounded-lg outline-none"
                 >
                   <option value="Percentage">Percentage</option>
                   <option value="Fixed">Fixed Amount</option>
@@ -229,7 +242,7 @@ const DiscountManagement = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, value: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="form-input w-full px-3 py-2 rounded-lg outline-none"
                   required
                 />
               </div>
@@ -254,14 +267,14 @@ const DiscountManagement = () => {
               <div className="flex space-x-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition"
+                  className="flex-1 btn-primary py-2.5 rounded-lg transition"
                 >
                   {editingDiscount ? "Update" : "Add"}
                 </button>
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 rounded-lg transition"
+                  className="flex-1 btn-secondary py-2.5 rounded-lg transition"
                 >
                   Cancel
                 </button>

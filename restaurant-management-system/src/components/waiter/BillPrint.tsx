@@ -9,6 +9,7 @@ interface BillPrintProps {
   discountAmount: number;
   totalPrice: number;
   paymentMethod: string;
+  restaurantName?: string;
 }
 
 const BillPrint = ({
@@ -20,13 +21,14 @@ const BillPrint = ({
   discountAmount,
   totalPrice,
   paymentMethod,
+  restaurantName = "RESTAURANT",
 }: BillPrintProps) => {
   const currentDate = formatNepaliDateTime();
 
   return (
     <div className="print:block max-w-xs mx-auto p-4 font-mono text-sm">
       <div className="text-center mb-4">
-        <h1 className="text-2xl font-bold">RESTAURANT</h1>
+        <h1 className="text-2xl font-bold">{restaurantName}</h1>
         <p className="text-xs">Thank you for dining with us!</p>
         <div className="border-t-2 border-dashed border-gray-400 my-2"></div>
       </div>

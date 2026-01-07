@@ -22,6 +22,7 @@ export async function initDb() {
         username TEXT NOT NULL UNIQUE,
         password TEXT NOT NULL,
         role TEXT NOT NULL CHECK(role IN ('Admin', 'Waiter')),
+        party TEXT NOT NULL DEFAULT 'cafe and restaurents',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -46,6 +47,7 @@ export async function initDb() {
         category_id INTEGER,
         stock INTEGER DEFAULT 1,
         available INTEGER DEFAULT 1,
+        images TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
       )
@@ -58,13 +60,14 @@ export async function initDb() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         table_number INTEGER NOT NULL,
         waiter_id INTEGER NOT NULL,
+        waiter_name TEXT,
         status TEXT DEFAULT 'Pending',
         subtotal DECIMAL(10, 2) DEFAULT 0,
         discount_amount DECIMAL(10, 2) DEFAULT 0,
         total_price DECIMAL(10, 2) DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (waiter_id) REFERENCES users(id) ON DELETE CASCADE
+        FOREIGN KEY (waiter_id) REFERENCES users(id) ON DELETE SET NULL
       )
     `);
     console.log("✓ Orders table created");
@@ -154,8 +157,8 @@ export async function initDb() {
 
     if (!adminUser) {
       await db.run(
-        "INSERT INTO users (name, username, password, role) VALUES (?, ?, ?, ?)",
-        ["Admin User", "admin", "admin123", "Admin"]
+        "INSERT INTO users (name, username, password, role, party) VALUES (?, ?, ?, ?, ?)",
+        ["Admin User", "admin", "admin123", "Admin", "cafe and restaurents"]
       );
       console.log("✓ Admin user created (username: admin, password: admin123)");
     }

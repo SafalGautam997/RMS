@@ -1,6 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { logout } from "../../store/slices/authSlice";
+import ThemeSwitcher from "../ThemeSwitcher";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faClipboardList,
+  faClock,
+  faReceipt,
+  faSignOutAlt,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
 
 const WaiterDashboard = () => {
   const dispatch = useAppDispatch();
@@ -13,88 +22,82 @@ const WaiterDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-400 via-teal-400 to-cyan-500 relative overflow-hidden">
-      {/* Animated background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 right-20 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse delay-500"></div>
-      </div>
-
-      {/* Header */}
-      <header className="bg-white/90 backdrop-blur-xl shadow-2xl border-b border-white/30 relative z-10">
-        <div className="max-w-7xl mx-auto px-4 py-5 flex justify-between items-center">
+    <div className="min-h-screen">
+      <header className="header-main">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <span className="text-3xl">🤵</span>
+            <div className="icon-box w-12 h-12 rounded-xl flex items-center justify-center shadow-lg">
+              <FontAwesomeIcon icon={faUser} className="text-2xl text-white" />
             </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-              Waiter Panel
-            </h1>
+            <h1 className="text-2xl font-bold text-white">Waiter Panel</h1>
+          </div>
+          <div className="text-center">
+            <p className="text-lg font-bold text-white">{user?.party}</p>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="hidden sm:flex items-center space-x-2 bg-gradient-to-r from-emerald-100 to-teal-50 px-5 py-2.5 rounded-xl border border-emerald-200 shadow-sm">
-              <span className="text-sm text-emerald-600 font-medium">
-                Hello,
+            <ThemeSwitcher />
+            <div className="hidden sm:flex items-center space-x-2 bg-white bg-opacity-20 px-4 py-2 rounded-xl border border-white border-opacity-30">
+              <span className="text-sm text-white text-opacity-80">
+                Welcome,
               </span>
-              <span className="font-bold text-emerald-800">{user?.name}</span>
+              <span className="font-semibold text-white">{user?.name}</span>
             </div>
             <button
               onClick={handleLogout}
-              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-2xl font-semibold transform hover:-translate-y-0.5"
+              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-xl font-semibold transform hover:-translate-y-0.5 flex items-center space-x-2"
             >
-              Logout
+              <FontAwesomeIcon icon={faSignOutAlt} />
+              <span>Logout</span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-12 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* New Order */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <button
             onClick={() => navigate("/waiter/new-order")}
-            className="group bg-white/95 backdrop-blur-sm hover:bg-white rounded-3xl shadow-2xl p-16 text-center transition-all duration-500 transform hover:scale-105 hover:shadow-3xl border-4 border-white/50 hover:border-emerald-300"
+            className="card group p-8 text-left transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
           >
-            <div className="bg-gradient-to-br from-emerald-500 to-teal-600 w-32 h-32 mx-auto rounded-3xl flex items-center justify-center mb-6 shadow-2xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-              <span className="text-7xl">🍽️</span>
+            <div className="icon-box w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <FontAwesomeIcon
+                icon={faReceipt}
+                className="text-4xl text-white"
+              />
             </div>
-            <h2 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-4 group-hover:scale-110 transition-transform duration-300">
-              New Order
-            </h2>
-            <p className="text-gray-600 text-xl font-medium">
+            <h2 className="text-xl font-bold mb-2 gradient-text">New Order</h2>
+            <p className="text-gray-600 text-sm leading-relaxed">
               Create a new order for a table
             </p>
           </button>
 
-          {/* My Orders */}
           <button
             onClick={() => navigate("/waiter/orders")}
-            className="group bg-white/95 backdrop-blur-sm hover:bg-white rounded-3xl shadow-2xl p-16 text-center transition-all duration-500 transform hover:scale-105 hover:shadow-3xl border-4 border-white/50 hover:border-cyan-300"
+            className="card group p-8 text-left transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
           >
-            <div className="bg-gradient-to-br from-cyan-500 to-blue-600 w-32 h-32 mx-auto rounded-3xl flex items-center justify-center mb-6 shadow-2xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-              <span className="text-7xl">📋</span>
+            <div className="icon-box w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <FontAwesomeIcon
+                icon={faClipboardList}
+                className="text-4xl text-white"
+              />
             </div>
-            <h2 className="text-4xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent mb-4 group-hover:scale-110 transition-transform duration-300">
-              My Orders
-            </h2>
-            <p className="text-gray-600 text-xl font-medium">
+            <h2 className="text-xl font-bold mb-2 gradient-text">My Orders</h2>
+            <p className="text-gray-600 text-sm leading-relaxed">
               View and manage your orders
             </p>
           </button>
 
-          {/* Pending Orders */}
           <button
             onClick={() => navigate("/waiter/pending")}
-            className="group bg-white/95 backdrop-blur-sm hover:bg-white rounded-3xl shadow-2xl p-16 text-center transition-all duration-500 transform hover:scale-105 hover:shadow-3xl border-4 border-white/50 hover:border-amber-300"
+            className="card group p-8 text-left transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
           >
-            <div className="bg-gradient-to-br from-amber-500 to-orange-600 w-32 h-32 mx-auto rounded-3xl flex items-center justify-center mb-6 shadow-2xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-              <span className="text-7xl">⏳</span>
+            <div className="icon-box w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <FontAwesomeIcon icon={faClock} className="text-4xl text-white" />
             </div>
-            <h2 className="text-4xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent mb-4 group-hover:scale-110 transition-transform duration-300">
+            <h2 className="text-xl font-bold mb-2 gradient-text">
               Pending Orders
             </h2>
-            <p className="text-gray-600 text-xl font-medium">
+            <p className="text-gray-600 text-sm leading-relaxed">
               View orders waiting to be served
             </p>
           </button>

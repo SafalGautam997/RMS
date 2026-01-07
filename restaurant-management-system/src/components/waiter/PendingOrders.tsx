@@ -2,6 +2,15 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { orderQueries, orderItemQueries } from "../../db/queries";
 import { formatNepaliDateTime } from "../../utils/timeUtils";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faArrowLeft,
+  faCheck,
+  faCircleCheck,
+  faClock,
+  faCreditCard,
+  faRotateRight,
+} from "@fortawesome/free-solid-svg-icons";
 
 const PendingOrders = () => {
   const navigate = useNavigate();
@@ -62,25 +71,30 @@ const PendingOrders = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow-md">
+    <div className="min-h-screen">
+      <header className="header-main">
         <div className="px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <button
               onClick={() => navigate("/waiter")}
-              className="text-gray-600 hover:text-gray-800"
+              className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-xl transition font-semibold inline-flex items-center gap-2"
             >
-              ← Back
+              <FontAwesomeIcon icon={faArrowLeft} />
+              <span>Back</span>
             </button>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-800">
-              ⏳ Pending Orders
+            <h1 className="text-xl md:text-2xl font-bold text-white">
+              <span className="mr-2">
+                <FontAwesomeIcon icon={faClock} />
+              </span>
+              Pending Orders
             </h1>
           </div>
           <button
             onClick={loadPendingOrders}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
+            className="btn-primary px-4 py-2 rounded-lg transition font-semibold inline-flex items-center gap-2"
           >
-            🔄 Refresh
+            <FontAwesomeIcon icon={faRotateRight} />
+            <span>Refresh</span>
           </button>
         </div>
       </header>
@@ -90,7 +104,9 @@ const PendingOrders = () => {
           <div className="text-center py-12 text-gray-500">Loading...</div>
         ) : orders.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">✅</div>
+            <div className="text-6xl mb-4 text-green-600">
+              <FontAwesomeIcon icon={faCircleCheck} />
+            </div>
             <p className="text-gray-500 text-lg font-semibold">
               All orders are served! No pending orders.
             </p>
@@ -100,7 +116,7 @@ const PendingOrders = () => {
             {orders.map((order) => (
               <div
                 key={order.id}
-                className={`bg-white rounded-lg shadow-md p-6 border-l-4 ${
+                className={`card p-6 border-l-4 ${
                   order.status === "Pending"
                     ? "border-amber-500"
                     : "border-green-500"
@@ -125,7 +141,14 @@ const PendingOrders = () => {
                         : "bg-green-100 text-green-800"
                     }`}
                   >
-                    {order.status === "Pending" ? "⏳ Pending" : "✓ Served"}
+                    <span className="inline-flex items-center gap-2">
+                      <FontAwesomeIcon
+                        icon={order.status === "Pending" ? faClock : faCheck}
+                      />
+                      <span>
+                        {order.status === "Pending" ? "Pending" : "Served"}
+                      </span>
+                    </span>
                   </span>
                 </div>
 
@@ -143,16 +166,18 @@ const PendingOrders = () => {
 
                 <button
                   onClick={() => handleProceedToPayment(order)}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition font-semibold mb-2"
+                  className="w-full btn-primary py-2 rounded-lg transition font-semibold mb-2 inline-flex items-center justify-center gap-2"
                 >
-                  💳 Proceed to Payment
+                  <FontAwesomeIcon icon={faCreditCard} />
+                  <span>Proceed to Payment</span>
                 </button>
                 {order.status === "Pending" && (
                   <button
                     onClick={() => handleMarkServed(order.id)}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition font-semibold"
+                    className="w-full btn-secondary py-2 rounded-lg transition font-semibold inline-flex items-center justify-center gap-2"
                   >
-                    ✓ Mark as Served
+                    <FontAwesomeIcon icon={faCheck} />
+                    <span>Mark as Served</span>
                   </button>
                 )}
               </div>

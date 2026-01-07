@@ -1,6 +1,20 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faArrowLeft,
+  faCartShopping,
+  faChair,
+  faCheck,
+  faClock,
+  faMinus,
+  faPlus,
+  faTag,
+  faTrash,
+  faUtensils,
+  faXmark,
+} from "@fortawesome/free-solid-svg-icons";
 import {
   setTableNumber,
   addItemToCurrentOrder,
@@ -127,26 +141,30 @@ const NewOrder = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-400 via-teal-400 to-cyan-500">
+    <div className="min-h-screen">
       {/* Header */}
-      <header className="waiter-header sticky top-0 z-40">
+      <header className="header-main sticky top-0 z-40">
         <div className="px-4 py-5 flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <button
               onClick={() => navigate("/waiter")}
-              className="text-white hover:text-gray-200 transition text-2xl font-bold"
+              className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-xl transition font-semibold flex items-center gap-2"
             >
-              ← Back
+              <FontAwesomeIcon icon={faArrowLeft} />
+              <span>Back</span>
             </button>
             <h1 className="text-2xl md:text-3xl font-bold text-white">
-              🛒 New Order
+              New Order
             </h1>
           </div>
           <button
             onClick={() => setShowCart(true)}
-            className="btn-success relative"
+            className="btn-primary relative px-5 py-2.5 rounded-xl"
           >
-            🛒 Cart ({currentOrder.items.length})
+            <span className="flex items-center gap-2">
+              <FontAwesomeIcon icon={faCartShopping} />
+              <span>Cart ({currentOrder.items.length})</span>
+            </span>
           </button>
         </div>
       </header>
@@ -156,7 +174,10 @@ const NewOrder = () => {
         {!currentOrder.tableNumber && (
           <div className="card animate-slideInLeft mb-6">
             <h2 className="text-2xl font-bold gradient-text mb-4">
-              🪑 Select Table Number
+              <span className="mr-2">
+                <FontAwesomeIcon icon={faChair} />
+              </span>
+              Select Table Number
             </h2>
             <div className="flex space-x-3">
               <input
@@ -166,8 +187,14 @@ const NewOrder = () => {
                 placeholder="Enter table number"
                 className="form-input flex-1"
               />
-              <button onClick={handleSetTable} className="btn-success">
-                ✓ Set Table
+              <button
+                onClick={handleSetTable}
+                className="btn-primary px-5 py-2.5 rounded-xl"
+              >
+                <span className="flex items-center gap-2">
+                  <FontAwesomeIcon icon={faCheck} />
+                  <span>Set</span>
+                </span>
               </button>
             </div>
           </div>
@@ -175,7 +202,10 @@ const NewOrder = () => {
 
         {currentOrder.tableNumber && (
           <div className="badge badge-success mb-6 block p-4 text-lg">
-            🪑 Table: {currentOrder.tableNumber}
+            <span className="mr-2">
+              <FontAwesomeIcon icon={faChair} />
+            </span>
+            Table: {currentOrder.tableNumber}
           </div>
         )}
 
@@ -186,10 +216,10 @@ const NewOrder = () => {
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category || "All")}
-                className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition ${
+                className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition ${
                   selectedCategory === category
-                    ? "bg-blue-600 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-100"
+                    ? "btn-primary"
+                    : "btn-secondary"
                 }`}
               >
                 {category}
@@ -213,7 +243,19 @@ const NewOrder = () => {
                   onClick={() => handleAddItem(item)}
                   className="flex-1 flex flex-col"
                 >
-                  <div className="menu-item-icon">🍴</div>
+                  {item.images ? (
+                    <div className="w-full h-40 mb-3 rounded-lg overflow-hidden bg-gray-100">
+                      <img
+                        src={item.images}
+                        alt={item.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                    </div>
+                  ) : (
+                    <div className="menu-item-icon">
+                      <FontAwesomeIcon icon={faUtensils} />
+                    </div>
+                  )}
                   <h3 className="font-bold text-gray-800 mb-1 text-sm md:text-base">
                     {item.name}
                   </h3>
@@ -225,7 +267,7 @@ const NewOrder = () => {
                       ₹{item.price.toFixed(2)}
                     </p>
                     <span className="text-xl group-hover:scale-125 transition">
-                      ➕
+                      <FontAwesomeIcon icon={faPlus} />
                     </span>
                   </div>
                   {!item.available && (
@@ -246,7 +288,7 @@ const NewOrder = () => {
                       }}
                       className="bg-red-400 hover:bg-red-500 text-white w-6 h-6 rounded flex items-center justify-center font-bold text-sm"
                     >
-                      −
+                      <FontAwesomeIcon icon={faMinus} />
                     </button>
                     <span className="font-bold text-gray-800 text-sm min-w-4 text-center">
                       {cartItem.quantity}
@@ -263,7 +305,7 @@ const NewOrder = () => {
                       }}
                       className="bg-green-400 hover:bg-green-500 text-white w-6 h-6 rounded flex items-center justify-center font-bold text-sm"
                     >
-                      +
+                      <FontAwesomeIcon icon={faPlus} />
                     </button>
                   </div>
                 )}
@@ -279,12 +321,17 @@ const NewOrder = () => {
           <div className="cart-container open">
             {/* Cart Header */}
             <div className="cart-header">
-              <h2 className="text-2xl font-bold">🛒 Order Cart</h2>
+              <h2 className="text-2xl font-bold">
+                <span className="mr-2">
+                  <FontAwesomeIcon icon={faCartShopping} />
+                </span>
+                Order Cart
+              </h2>
               <button
                 onClick={() => setShowCart(false)}
                 className="modal-close"
               >
-                ✕
+                <FontAwesomeIcon icon={faXmark} />
               </button>
             </div>
 
@@ -292,7 +339,9 @@ const NewOrder = () => {
             <div className="cart-items-scroll">
               {currentOrder.items.length === 0 ? (
                 <div className="text-center text-gray-400 mt-8">
-                  <div className="text-6xl mb-4">🛒</div>
+                  <div className="text-6xl mb-4">
+                    <FontAwesomeIcon icon={faCartShopping} />
+                  </div>
                   <p className="font-semibold">Your cart is empty</p>
                 </div>
               ) : (
@@ -301,7 +350,7 @@ const NewOrder = () => {
                     <div key={item.menu_item_id} className="cart-item group">
                       <div className="flex justify-between items-start mb-2">
                         <h3 className="font-semibold text-gray-800">
-                          🍴 {item.item_name}
+                          {item.item_name}
                         </h3>
                         <button
                           onClick={() =>
@@ -311,7 +360,7 @@ const NewOrder = () => {
                           }
                           className="text-red-600 hover:text-red-800 hover:bg-red-50 p-1 rounded transition"
                         >
-                          🗑️
+                          <FontAwesomeIcon icon={faTrash} />
                         </button>
                       </div>
                       <div className="flex justify-between items-center">
@@ -327,7 +376,7 @@ const NewOrder = () => {
                             }
                             className="bg-red-400 hover:bg-red-500 text-white w-8 h-8 rounded-full font-bold"
                           >
-                            −
+                            <FontAwesomeIcon icon={faMinus} />
                           </button>
                           <span className="font-semibold text-gray-800">
                             {item.quantity}
@@ -343,7 +392,7 @@ const NewOrder = () => {
                             }
                             className="bg-green-400 hover:bg-green-500 text-white w-8 h-8 rounded-full font-bold"
                           >
-                            +
+                            <FontAwesomeIcon icon={faPlus} />
                           </button>
                         </div>
                         <span className="font-bold text-green-600">
@@ -380,13 +429,19 @@ const NewOrder = () => {
                 onClick={() => setShowDiscountModal(true)}
                 className="btn-secondary w-full mb-2"
               >
-                🎟️ Apply Discount
+                <span className="flex items-center justify-center gap-2">
+                  <FontAwesomeIcon icon={faTag} />
+                  <span>Apply Discount</span>
+                </span>
               </button>
               <button
                 onClick={handleConfirmOrder}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg w-full transition mb-2"
+                className="btn-primary w-full mb-2 py-2.5 rounded-lg"
               >
-                ⏳ Confirm Order (Pending)
+                <span className="flex items-center justify-center gap-2">
+                  <FontAwesomeIcon icon={faClock} />
+                  <span>Confirm Order (Pending)</span>
+                </span>
               </button>
               <button
                 onClick={() => {
@@ -400,9 +455,12 @@ const NewOrder = () => {
                   }
                   navigate("/waiter/checkout");
                 }}
-                className="btn-success w-full"
+                className="btn-secondary w-full"
               >
-                ✓ Proceed to Checkout
+                <span className="flex items-center justify-center gap-2">
+                  <FontAwesomeIcon icon={faCheck} />
+                  <span>Proceed to Checkout</span>
+                </span>
               </button>
             </div>
           </div>
@@ -417,10 +475,13 @@ const NewOrder = () => {
               onClick={() => setShowDiscountModal(false)}
               className="modal-close"
             >
-              ✕
+              <FontAwesomeIcon icon={faXmark} />
             </button>
             <h2 className="text-3xl font-bold gradient-text mb-6">
-              🎟️ Apply Discount
+              <span className="mr-2">
+                <FontAwesomeIcon icon={faTag} />
+              </span>
+              Apply Discount
             </h2>
             <div className="space-y-3 mb-6">
               {discounts.map((discount) => (
@@ -434,8 +495,8 @@ const NewOrder = () => {
                   </h3>
                   <p className="text-sm text-gray-600 mt-1">
                     {discount.type === "Percentage"
-                      ? `📊 ${discount.value}% Off`
-                      : `💰 $${discount.value} Off`}
+                      ? `${discount.value}% Off`
+                      : `₹${discount.value} Off`}
                   </p>
                 </button>
               ))}
@@ -444,7 +505,10 @@ const NewOrder = () => {
               onClick={() => setShowDiscountModal(false)}
               className="btn-secondary w-full"
             >
-              ✕ Close
+              <span className="inline-flex items-center justify-center gap-2">
+                <FontAwesomeIcon icon={faXmark} />
+                <span>Close</span>
+              </span>
             </button>
           </div>
         </div>

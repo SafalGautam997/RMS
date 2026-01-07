@@ -3,6 +3,14 @@ import { useNavigate } from "react-router-dom";
 import type { Transaction } from "../../types";
 import { transactionQueries } from "../../db/queries";
 import { formatNepaliDateTime } from "../../utils/timeUtils";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faArrowLeft,
+  faFloppyDisk,
+  faPenToSquare,
+  faTrash,
+  faXmark,
+} from "@fortawesome/free-solid-svg-icons";
 
 const Transactions = () => {
   const navigate = useNavigate();
@@ -68,45 +76,46 @@ const Transactions = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow-md">
+    <div className="min-h-screen">
+      <header className="header-main">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <button
               onClick={() => navigate("/admin")}
-              className="text-gray-600 hover:text-gray-800"
+              className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-xl transition font-semibold inline-flex items-center gap-2"
             >
-              ← Back
+              <FontAwesomeIcon icon={faArrowLeft} />
+              <span>Back</span>
             </button>
-            <h1 className="text-2xl font-bold text-gray-800">Transactions</h1>
+            <h1 className="text-2xl font-bold text-white">Transactions</h1>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="table-container overflow-hidden">
+          <table className="table-modern min-w-full divide-y divide-gray-200">
+            <thead>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
                   Transaction ID
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
                   Order ID
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
                   Table
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
                   Amount
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
                   Payment Method
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
                   Date & Time
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -139,13 +148,19 @@ const Transactions = () => {
                       onClick={() => handleEdit(transaction)}
                       className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition"
                     >
-                      ✏️ Edit
+                      <span className="inline-flex items-center gap-2">
+                        <FontAwesomeIcon icon={faPenToSquare} />
+                        <span>Edit</span>
+                      </span>
                     </button>
                     <button
                       onClick={() => handleDelete(transaction.id)}
                       className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded transition"
                     >
-                      🗑️ Delete
+                      <span className="inline-flex items-center gap-2">
+                        <FontAwesomeIcon icon={faTrash} />
+                        <span>Delete</span>
+                      </span>
                     </button>
                   </td>
                 </tr>
@@ -162,8 +177,8 @@ const Transactions = () => {
 
       {/* Edit Modal */}
       {showEditModal && editingTransaction && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
+        <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
+          <div className="modal-box rounded-lg p-8 max-w-md w-full">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">
               Edit Transaction #{editingTransaction.id}
             </h2>
@@ -183,7 +198,7 @@ const Transactions = () => {
                       amount: parseFloat(e.target.value),
                     })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="form-input w-full px-4 py-2 rounded-lg"
                 />
               </div>
 
@@ -199,7 +214,7 @@ const Transactions = () => {
                       paymentMethod: e.target.value,
                     })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="form-select w-full px-4 py-2 rounded-lg"
                 >
                   <option value="Cash">Cash</option>
                   <option value="Card">Card</option>
@@ -212,15 +227,21 @@ const Transactions = () => {
             <div className="flex gap-3">
               <button
                 onClick={handleSaveEdit}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition font-semibold"
+                className="btn-primary flex-1 py-2.5 rounded-lg transition font-semibold"
               >
-                💾 Save
+                <span className="inline-flex items-center justify-center gap-2">
+                  <FontAwesomeIcon icon={faFloppyDisk} />
+                  <span>Save</span>
+                </span>
               </button>
               <button
                 onClick={() => setShowEditModal(false)}
-                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 rounded-lg transition font-semibold"
+                className="btn-secondary flex-1 py-2.5 rounded-lg transition font-semibold"
               >
-                ✕ Cancel
+                <span className="inline-flex items-center justify-center gap-2">
+                  <FontAwesomeIcon icon={faXmark} />
+                  <span>Cancel</span>
+                </span>
               </button>
             </div>
           </div>

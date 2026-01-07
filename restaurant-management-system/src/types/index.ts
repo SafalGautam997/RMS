@@ -3,7 +3,8 @@ export interface User {
   name: string;
   username: string;
   password?: string;
-  role: 'Admin' | 'Waiter';
+  role: "Admin" | "Waiter";
+  party: string;
   created_at: string;
 }
 
@@ -21,6 +22,7 @@ export interface MenuItem {
   category_name?: string;
   stock: number;
   available: number;
+  images?: string;
   created_at: string;
 }
 
@@ -29,7 +31,7 @@ export interface Order {
   table_number: number;
   waiter_id: number;
   waiter_name?: string;
-  status: 'Pending' | 'Served' | 'Paid' | 'Cancelled';
+  status: "Pending" | "Served" | "Paid" | "Cancelled";
   subtotal: number;
   discount_amount: number;
   total_price: number;
@@ -49,7 +51,7 @@ export interface OrderItem {
 export interface Discount {
   id: number;
   name: string;
-  type: 'Percentage' | 'Fixed';
+  type: "Percentage" | "Fixed";
   value: number;
   active: number;
   created_at: string;

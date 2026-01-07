@@ -15,7 +15,8 @@ initDb().catch((error) => {
 });
 
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Enable CORS for development
 app.use((req, res, next) => {
@@ -35,15 +36,21 @@ app.use((req, res, next) => {
 
 app.post("/api/users/login", async (req: Request, res: Response) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, party } = req.body;
+    console.log("Login attempt:", { username, party, hasPassword: !!password });
     const db = await getDB();
     const user = await db.get(
-      "SELECT id, name, username, role, created_at FROM users WHERE username = ? AND password = ?",
-      [username, password]
+      "SELECT id, name, username, role, party, created_at FROM users WHERE username = ? AND password = ? AND party = ?",
+      [username, password, party]
+    );
+    console.log(
+      "User found:",
+      user ? { id: user.id, username: user.username, role: user.role } : null
     );
     if (!user) return res.status(401).json({ error: "Invalid credentials" });
     res.json(user);
   } catch (error) {
+    console.error("Login error:", error);
     res.status(500).json({ error: "Database error" });
   }
 });
@@ -52,7 +59,7 @@ app.get("/api/users", async (req: Request, res: Response) => {
   try {
     const db = await getDB();
     const rows = await db.all(
-      "SELECT id, name, username, role, created_at FROM users"
+      "SELECT id, name, username, role, party, created_at FROM users"
     );
     res.json(rows);
   } catch (error) {
@@ -62,11 +69,11 @@ app.get("/api/users", async (req: Request, res: Response) => {
 
 app.post("/api/users", async (req: Request, res: Response) => {
   try {
-    const { name, username, password, role } = req.body;
+    const { name, username, password, role, party } = req.body;
     const db = await getDB();
     const result = await db.run(
-      "INSERT INTO users (name, username, password, role) VALUES (?, ?, ?, ?)",
-      [name, username, password, role]
+      "INSERT INTO users (name, username, password, role, party) VALUES (?, ?, ?, ?, ?)",
+      [name, username, password, role, party || "cafe and restaurents"]
     );
     res.json({ lastID: result.lastID, changes: result.changes });
   } catch (error) {
@@ -154,14 +161,20 @@ app.get("/api/menu/available", async (req: Request, res: Response) => {
 
 app.post("/api/menu", async (req: Request, res: Response) => {
   try {
-    const { name, price, categoryId, stock } = req.body;
+    const { name, price, categoryId, stock, imageUrl } = req.body;
+    console.log("Creating menu item:", {
+      name,
+      hasImage: !!imageUrl,
+      imageLength: imageUrl?.length,
+    });
     const db = await getDB();
     const result = await db.run(
-      "INSERT INTO menu_items (name, price, category_id, stock) VALUES (?, ?, ?, ?)",
-      [name, price, categoryId, stock]
+      "INSERT INTO menu_items (name, price, category_id, stock, images) VALUES (?, ?, ?, ?, ?)",
+      [name, price, categoryId, stock, imageUrl || null]
     );
     res.json({ lastID: result.lastID, changes: result.changes });
   } catch (error) {
+    console.error("Error creating menu item:", error);
     res.status(500).json({ error: "Database error" });
   }
 });
@@ -169,14 +182,21 @@ app.post("/api/menu", async (req: Request, res: Response) => {
 app.put("/api/menu/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, price, categoryId, stock, available } = req.body;
+    const { name, price, categoryId, stock, available, imageUrl } = req.body;
+    console.log("Updating menu item:", {
+      id,
+      name,
+      hasImage: !!imageUrl,
+      imageLength: imageUrl?.length,
+    });
     const db = await getDB();
     const result = await db.run(
-      "UPDATE menu_items SET name = ?, price = ?, category_id = ?, stock = ?, available = ? WHERE id = ?",
-      [name, price, categoryId, stock, available, id]
+      "UPDATE menu_items SET name = ?, price = ?, category_id = ?, stock = ?, available = ?, images = ? WHERE id = ?",
+      [name, price, categoryId, stock, available, imageUrl || null, id]
     );
     res.json({ changes: result.changes });
   } catch (error) {
+    console.error("Error updating menu item:", error);
     res.status(500).json({ error: "Database error" });
   }
 });
@@ -265,9 +285,23 @@ app.post("/api/orders", async (req: Request, res: Response) => {
       totalPrice,
     } = req.body;
     const db = await getDB();
+
+    const waiter = await db.get("SELECT name FROM users WHERE id = ?", [
+      waiterId,
+    ]);
+    const waiterName = waiter ? waiter.name : null;
+
     const result = await db.run(
-      "INSERT INTO orders (table_number, waiter_id, status, subtotal, discount_amount, total_price) VALUES (?, ?, ?, ?, ?, ?)",
-      [tableNumber, waiterId, status, subtotal, discountAmount, totalPrice]
+      "INSERT INTO orders (table_number, waiter_id, waiter_name, status, subtotal, discount_amount, total_price) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [
+        tableNumber,
+        waiterId,
+        waiterName,
+        status,
+        subtotal,
+        discountAmount,
+        totalPrice,
+      ]
     );
     res.json({ lastID: result.lastID, changes: result.changes });
   } catch (error) {
@@ -435,6 +469,7 @@ app.get("/api/transactions", async (req: Request, res: Response) => {
     const rows = await db.all(`
       SELECT t.*, o.table_number, o.total_price FROM transactions t
       LEFT JOIN orders o ON t.order_id = o.id
+      WHERE o.status = 'Paid'
       ORDER BY t.created_at DESC
     `);
     res.json(rows);
@@ -506,7 +541,7 @@ app.get(
       const { date } = req.params;
       const db = await getDB();
       const rows = await db.all(
-        "SELECT * FROM transactions WHERE DATE(created_at) = ? ORDER BY created_at",
+        "SELECT t.* FROM transactions t LEFT JOIN orders o ON t.order_id = o.id WHERE DATE(t.created_at) = ? AND o.status = 'Paid' ORDER BY t.created_at",
         [date]
       );
       res.json(rows);

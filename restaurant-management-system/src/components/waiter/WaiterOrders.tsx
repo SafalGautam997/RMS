@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "../../store/hooks";
 import type { Order } from "../../types";
 import { orderQueries } from "../../db/queries";
+import { formatNepaliDateTime } from "../../utils/timeUtils";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowLeft, faList } from "@fortawesome/free-solid-svg-icons";
 
 const WaiterOrders = () => {
   const navigate = useNavigate();
@@ -44,17 +47,18 @@ const WaiterOrders = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow-md">
+    <div className="min-h-screen">
+      <header className="header-main">
         <div className="px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <button
               onClick={() => navigate("/waiter")}
-              className="text-gray-600 hover:text-gray-800"
+              className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-xl transition font-semibold inline-flex items-center gap-2"
             >
-              ← Back
+              <FontAwesomeIcon icon={faArrowLeft} />
+              <span>Back</span>
             </button>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-800">
+            <h1 className="text-xl md:text-2xl font-bold text-white">
               My Orders
             </h1>
           </div>
@@ -64,7 +68,7 @@ const WaiterOrders = () => {
       <main className="px-4 py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {orders.map((order) => (
-            <div key={order.id} className="bg-white rounded-lg shadow-md p-6">
+            <div key={order.id} className="card p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="text-lg font-bold text-gray-800">
@@ -113,11 +117,13 @@ const WaiterOrders = () => {
 
         {orders.length === 0 && (
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">📋</div>
+            <div className="text-6xl mb-4 text-gray-400">
+              <FontAwesomeIcon icon={faList} />
+            </div>
             <p className="text-gray-500 text-lg">No orders yet</p>
             <button
               onClick={() => navigate("/waiter/new-order")}
-              className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition"
+              className="btn-primary mt-4 px-6 py-3 rounded-lg transition"
             >
               Create New Order
             </button>

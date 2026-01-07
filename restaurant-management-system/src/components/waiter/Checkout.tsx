@@ -9,6 +9,12 @@ import {
 } from "../../db/queries";
 import { useState, useEffect } from "react";
 import BillPrint from "./BillPrint";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faArrowLeft,
+  faCheck,
+  faPrint,
+} from "@fortawesome/free-solid-svg-icons";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -125,9 +131,9 @@ const Checkout = () => {
     };
 
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen py-8">
         <div className="max-w-2xl mx-auto px-4">
-          <div className="bg-white rounded-lg shadow-lg p-8">
+          <div className="card p-8">
             <div className="mb-6">
               <BillPrint
                 orderId={orderId}
@@ -138,21 +144,24 @@ const Checkout = () => {
                 discountAmount={displayData.discountAmount}
                 totalPrice={displayData.totalPrice}
                 paymentMethod={paymentMethod}
+                restaurantName={user?.party || "RESTAURANT"}
               />
             </div>
 
             <div className="flex gap-3 mt-8 pt-6 border-t print:hidden">
               <button
                 onClick={handlePrint}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg transition font-semibold"
+                className="btn-primary flex-1 py-3 rounded-lg transition font-semibold inline-flex items-center justify-center gap-2"
               >
-                🖨️ Print Bill
+                <FontAwesomeIcon icon={faPrint} />
+                <span>Print Bill</span>
               </button>
               <button
                 onClick={handleFinish}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg transition font-semibold"
+                className="btn-secondary flex-1 py-3 rounded-lg transition font-semibold inline-flex items-center justify-center gap-2"
               >
-                Finish
+                <FontAwesomeIcon icon={faCheck} />
+                <span>Finish</span>
               </button>
             </div>
           </div>
@@ -162,17 +171,18 @@ const Checkout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow-md">
+    <div className="min-h-screen">
+      <header className="header-main">
         <div className="px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <button
               onClick={() => navigate("/waiter/new-order")}
-              className="text-gray-600 hover:text-gray-800"
+              className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-xl transition font-semibold inline-flex items-center gap-2"
             >
-              ← Back
+              <FontAwesomeIcon icon={faArrowLeft} />
+              <span>Back</span>
             </button>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-800">
+            <h1 className="text-xl md:text-2xl font-bold text-white">
               Checkout
             </h1>
           </div>
@@ -180,7 +190,7 @@ const Checkout = () => {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="card p-6 mb-6">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">
             Order Summary
           </h2>
@@ -239,7 +249,7 @@ const Checkout = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="card p-6">
           <h2 className="text-xl font-bold text-gray-800 mb-4">
             Payment Method
           </h2>
@@ -249,9 +259,7 @@ const Checkout = () => {
                 key={method}
                 onClick={() => setPaymentMethod(method)}
                 className={`py-3 rounded-lg font-semibold transition ${
-                  paymentMethod === method
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  paymentMethod === method ? "btn-primary" : "btn-secondary"
                 }`}
               >
                 {method}
@@ -261,7 +269,7 @@ const Checkout = () => {
 
           <button
             onClick={handlePayment}
-            className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-lg transition font-bold text-lg"
+            className="w-full btn-primary py-4 rounded-lg transition font-bold text-lg"
           >
             Complete Payment
           </button>

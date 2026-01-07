@@ -7,7 +7,7 @@ import {
 import { Provider } from "react-redux";
 import { store } from "./store";
 import { useEffect } from "react";
-import { initDatabase } from "./db/database";
+import { useAppSelector } from "./store/hooks";
 
 // Components
 import Login from "./components/Login";
@@ -30,14 +30,11 @@ import Checkout from "./components/waiter/Checkout";
 import PendingOrders from "./components/waiter/PendingOrders";
 
 function AppContent() {
+  const themeMode = useAppSelector((state) => state.theme.mode);
+
   useEffect(() => {
-    // Initialize database on app start
-    try {
-      initDatabase();
-    } catch (error) {
-      console.error("Failed to initialize database:", error);
-    }
-  }, []);
+    document.body.className = `theme-${themeMode}`;
+  }, [themeMode]);
 
   return (
     <Router>
