@@ -41,6 +41,7 @@ export default function CustomerMenu() {
   const [cart, setCart] = useState<Map<number, number>>(() => new Map());
   const [loading, setLoading] = useState(false);
   const [placing, setPlacing] = useState(false);
+  const [callingWaiter, setCallingWaiter] = useState(false);
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
 
@@ -169,6 +170,32 @@ export default function CustomerMenu() {
     }
   };
 
+  const callWaiter = async () => {
+    setError("");
+    setSuccess("");
+
+    if (!tableNumber) {
+      setError("Please select your table number");
+      return;
+    }
+
+    setCallingWaiter(true);
+    try {
+      const response = await fetch("/api/notifications/call-waiter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tableNumber, customerName }),
+      });
+      if (!response.ok) throw new Error("Failed to notify waiter");
+      setSuccess("Waiter notified.");
+    } catch (e) {
+      console.error(e);
+      setError("Failed to notify waiter");
+    } finally {
+      setCallingWaiter(false);
+    }
+  };
+
   // Step 1: name
   if (!customerName) {
     return (
@@ -286,6 +313,13 @@ export default function CustomerMenu() {
             <div className="text-white">
               <ThemeSwitcher />
             </div>
+            <button
+              className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-2 rounded-xl text-sm font-semibold"
+              onClick={callWaiter}
+              disabled={callingWaiter}
+            >
+              {callingWaiter ? "Calling..." : "Call Waiter"}
+            </button>
             <button
               className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-2 rounded-xl text-sm font-semibold"
               onClick={() => {

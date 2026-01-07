@@ -272,9 +272,6 @@ const Reports = () => {
                       <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase">
                         Total Sales
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase">
-                        Orders
-                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -294,9 +291,6 @@ const Reports = () => {
                           {product.total_revenue
                             ? product.total_revenue.toFixed(2)
                             : "0.00"}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          N/A
                         </td>
                       </tr>
                     ))}

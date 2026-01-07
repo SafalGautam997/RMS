@@ -1,13 +1,41 @@
 import express, { Request, Response } from "express";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 import getDB from "./db-connection.js";
 import { initDb } from "./db-init.js";
 import { publicRoutes } from "./backend/routes/publicRoutes.js";
 
 dotenv.config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 const PORT = process.env.SERVER_PORT || 3001;
+const HOST = process.env.SERVER_HOST || "0.0.0.0";
+
+type NotificationEvent = {
+  id: number;
+  type: "call_waiter";
+  table_number: number | null;
+  customer_name: string | null;
+  created_at: string;
+};
+
+let nextNotificationId = 1;
+const notificationClients = new Set<Response>();
+
+const broadcastNotification = (event: NotificationEvent) => {
+  const payload = `data: ${JSON.stringify(event)}\n\n`;
+  for (const client of notificationClients) {
+    try {
+      client.write(payload);
+    } catch {
+      notificationClients.delete(client);
+    }
+  }
+};
 
 // Initialize database on startup
 initDb().catch((error) => {
@@ -546,7 +574,7 @@ app.get(
       const { date } = req.params;
       const db = await getDB();
       const rows = await db.all(
-        "SELECT t.* FROM transactions t LEFT JOIN orders o ON t.order_id = o.id WHERE DATE(t.created_at) = ? AND o.status = 'Paid' ORDER BY t.created_at",
+        "SELECT t.*, o.table_number FROM transactions t LEFT JOIN orders o ON t.order_id = o.id WHERE DATE(t.created_at) = ? AND o.status = 'Paid' ORDER BY t.created_at",
         [date]
       );
       res.json(rows);
@@ -563,7 +591,7 @@ app.get(
       const { startDate, endDate } = req.params;
       const db = await getDB();
       const rows = await db.all(
-        "SELECT * FROM transactions WHERE DATE(created_at) BETWEEN ? AND ? ORDER BY created_at",
+        "SELECT t.*, o.table_number FROM transactions t LEFT JOIN orders o ON t.order_id = o.id WHERE DATE(t.created_at) BETWEEN ? AND ? AND o.status = 'Paid' ORDER BY t.created_at",
         [startDate, endDate]
       );
       res.json(rows);
@@ -580,7 +608,7 @@ app.get(
       const { year } = req.params;
       const db = await getDB();
       const rows = await db.all(
-        "SELECT * FROM transactions WHERE strftime('%Y', created_at) = ? ORDER BY created_at",
+        "SELECT t.*, o.table_number FROM transactions t LEFT JOIN orders o ON t.order_id = o.id WHERE strftime('%Y', t.created_at) = ? AND o.status = 'Paid' ORDER BY t.created_at",
         [year]
       );
       res.json(rows);
@@ -638,7 +666,7 @@ app.get(
       const { year, month } = req.params;
       const db = await getDB();
       const rows = await db.all(
-        "SELECT * FROM transactions WHERE strftime('%Y', created_at) = ? AND strftime('%m', created_at) = ? ORDER BY created_at",
+        "SELECT t.*, o.table_number FROM transactions t LEFT JOIN orders o ON t.order_id = o.id WHERE strftime('%Y', t.created_at) = ? AND strftime('%m', t.created_at) = ? AND o.status = 'Paid' ORDER BY t.created_at",
         [year, month.padStart(2, "0")]
       );
       res.json(rows);
@@ -650,12 +678,80 @@ app.get(
 
 // ============= HEALTH CHECK =============
 
+// ============= NOTIFICATIONS (SSE) =============
+
+app.get("/api/notifications/stream", (req: Request, res: Response) => {
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+  });
+
+  // Initial comment to establish the stream
+  res.write(": connected\n\n");
+
+  notificationClients.add(res);
+
+  const heartbeat = setInterval(() => {
+    try {
+      res.write(": ping\n\n");
+    } catch {
+      // ignore
+    }
+  }, 25000);
+
+  req.on("close", () => {
+    clearInterval(heartbeat);
+    notificationClients.delete(res);
+  });
+});
+
+app.post("/api/notifications/call-waiter", (req: Request, res: Response) => {
+  const rawTable = req.body?.tableNumber;
+  const rawCustomerName = req.body?.customerName;
+  const tableNumber =
+    typeof rawTable === "number" && Number.isFinite(rawTable)
+      ? rawTable
+      : typeof rawTable === "string" && rawTable.trim()
+      ? Number(rawTable)
+      : null;
+
+  const customerName =
+    typeof rawCustomerName === "string" && rawCustomerName.trim()
+      ? rawCustomerName.trim()
+      : null;
+
+  const event: NotificationEvent = {
+    id: nextNotificationId++,
+    type: "call_waiter",
+    table_number:
+      typeof tableNumber === "number" && Number.isFinite(tableNumber)
+        ? tableNumber
+        : null,
+    customer_name: customerName,
+    created_at: new Date().toISOString(),
+  };
+
+  broadcastNotification(event);
+  res.json({ ok: true, event });
+});
+
 app.get("/api/health", (req: Request, res: Response) => {
   res.json({ status: "Server is running" });
 });
 
+// ============= FRONTEND (PRODUCTION) =============
+
+if (process.env.NODE_ENV === "production") {
+  const clientDistPath = path.resolve(__dirname, "client");
+  app.use(express.static(clientDistPath));
+  app.get("*", (_req: Request, res: Response) => {
+    res.sendFile(path.join(clientDistPath, "index.html"));
+  });
+}
+
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on http://localhost:${PORT}`);
+app.listen(Number(PORT), HOST, () => {
+  console.log(`🚀 Server is running on http://${HOST}:${PORT}`);
   console.log(`📊 SQLite database ready`);
 });

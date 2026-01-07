@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3001/api";
+const API_URL = (import.meta.env.VITE_API_URL || "/api").replace(/\/$/, "");
 
 const PUBLIC_API_URL = `${API_URL}/public`;
 

@@ -2,7 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Order, OrderItem } from "../../types";
 import { orderQueries, orderItemQueries } from "../../db/queries";
-import { formatNepaliDateTime } from "../../utils/timeUtils";
+import {
+  formatNepaliDate,
+  formatNepaliTime,
+  formatNepaliDateTime,
+} from "../../utils/timeUtils";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowLeft,
@@ -100,21 +104,52 @@ const AllOrders = () => {
     }
   };
 
-  const downloadOrdersAsCSV = () => {
+  const csvEscape = (value: unknown) => {
+    const str = String(value ?? "");
+    const escaped = str.replace(/"/g, '""');
+    return /[\n\r,\"]/g.test(escaped) ? `"${escaped}"` : escaped;
+  };
+
+  const downloadOrdersAsCSV = async () => {
     const csvHeaders =
-      "Order ID,Table,Waiter,Subtotal,Discount,Total,Status,Date & Time\n";
+      "Order ID,Table,Waiter,Subtotal,Discount,Total,Status,Date,Time,Items\n";
+
+    const orderItemsByOrderId = new Map<number, OrderItem[]>();
+    await Promise.all(
+      filteredOrders.map(async (order) => {
+        try {
+          const items = await orderItemQueries.getByOrderId(order.id);
+          orderItemsByOrderId.set(order.id, items);
+        } catch (error) {
+          console.error("Error loading order items for CSV:", error);
+          orderItemsByOrderId.set(order.id, []);
+        }
+      })
+    );
+
     const csvRows = filteredOrders
-      .map(
-        (order) =>
-          `${order.id},${order.table_number},${
-            order.waiter_name || "N/A"
-          },${order.subtotal.toFixed(2)},${order.discount_amount.toFixed(
-            2
-          )},${order.total_price.toFixed(2)},${
-            order.status
-          },${formatNepaliDateTime(new Date(order.created_at))}`
-      )
+      .map((order) => {
+        const orderDate = new Date(order.created_at);
+        const items = orderItemsByOrderId.get(order.id) || [];
+        const itemNames = Array.from(
+          new Set(items.map((i) => i.item_name).filter(Boolean))
+        ).join("; ");
+
+        return [
+          csvEscape(order.id),
+          csvEscape(order.table_number),
+          csvEscape(order.waiter_name || "N/A"),
+          csvEscape(order.subtotal.toFixed(2)),
+          csvEscape(order.discount_amount.toFixed(2)),
+          csvEscape(order.total_price.toFixed(2)),
+          csvEscape(order.status),
+          csvEscape(formatNepaliDate(orderDate)),
+          csvEscape(formatNepaliTime(orderDate)),
+          csvEscape(itemNames),
+        ].join(",");
+      })
       .join("\n");
+
     const csvContent = csvHeaders + csvRows;
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
