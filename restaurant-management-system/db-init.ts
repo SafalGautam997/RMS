@@ -163,6 +163,28 @@ export async function initDb() {
       console.log("✓ Admin user created (username: admin, password: admin123)");
     }
 
+    // Seed an internal waiter account used for customer (QR/public) orders
+    const onlineWaiter = await db.get(
+      "SELECT * FROM users WHERE username = ?",
+      ["online_orders"]
+    );
+
+    if (!onlineWaiter) {
+      await db.run(
+        "INSERT INTO users (name, username, password, role, party) VALUES (?, ?, ?, ?, ?)",
+        [
+          "Online Orders",
+          "online_orders",
+          "online_orders",
+          "Waiter",
+          "cafe and restaurents",
+        ]
+      );
+      console.log(
+        "✓ Online Orders waiter created (username: online_orders, password: online_orders)"
+      );
+    }
+
     // Check if categories already exist
     const categoryCount = await db.get(
       "SELECT COUNT(*) as count FROM categories"

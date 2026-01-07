@@ -1,5 +1,7 @@
 const API_URL = "http://localhost:3001/api";
 
+const PUBLIC_API_URL = `${API_URL}/public`;
+
 // User queries
 export const userQueries = {
   login: async (username: string, password: string, party: string) => {
@@ -149,6 +151,34 @@ export const menuQueries = {
     });
     if (!response.ok) throw new Error("Failed to update stock");
     return await response.json();
+  },
+};
+
+// Public (customer) queries
+export const publicQueries = {
+  getMenu: async () => {
+    const response = await fetch(`${PUBLIC_API_URL}/menu`);
+    if (!response.ok) throw new Error("Failed to fetch menu");
+    return await response.json();
+  },
+
+  createOrder: async (payload: {
+    customerName: string;
+    tableNumber: number;
+    items: Array<{ menuItemId: number; quantity: number }>;
+  }) => {
+    const response = await fetch(`${PUBLIC_API_URL}/orders`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json().catch(() => null);
+    if (!response.ok) {
+      const message = data?.error || "Failed to place order";
+      throw new Error(message);
+    }
+    return data;
   },
 };
 

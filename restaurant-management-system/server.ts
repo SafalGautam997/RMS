@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import getDB from "./db-connection.js";
 import { initDb } from "./db-init.js";
+import { publicRoutes } from "./backend/routes/publicRoutes.js";
 
 dotenv.config();
 
@@ -31,6 +32,10 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+// ============= PUBLIC (CUSTOMER) ROUTES =============
+
+app.use("/api/public", publicRoutes);
 
 // ============= USER ROUTES =============
 

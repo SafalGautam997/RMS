@@ -59,7 +59,15 @@ const Login = () => {
       </div>
 
       <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-10 w-full max-w-4xl relative z-10 border border-white/20">
-        <div className="absolute top-6 right-6 text-gray-700">
+        <div className="absolute top-6 right-6 text-gray-700 flex items-center gap-2">
+          <button
+            onClick={() => navigate("/menu")}
+            className="p-2 rounded-lg hover:bg-opacity-20 hover:bg-black transition-all duration-300 flex items-center space-x-2"
+            type="button"
+          >
+            <FontAwesomeIcon icon={faUtensils} className="text-xl" />
+            <span className="text-sm font-semibold hidden md:inline">Menu</span>
+          </button>
           <ThemeSwitcher />
         </div>
         <div className="text-center mb-8">

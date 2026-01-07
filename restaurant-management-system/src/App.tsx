@@ -29,6 +29,9 @@ import WaiterOrders from "./components/waiter/WaiterOrders";
 import Checkout from "./components/waiter/Checkout";
 import PendingOrders from "./components/waiter/PendingOrders";
 
+// Customer (public) Components
+import CustomerMenu from "./components/customer/CustomerMenu";
+
 function AppContent() {
   const themeMode = useAppSelector((state) => state.theme.mode);
 
@@ -39,6 +42,9 @@ function AppContent() {
   return (
     <Router>
       <Routes>
+        {/* Public Customer Route */}
+        <Route path="/menu" element={<CustomerMenu />} />
+
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
 

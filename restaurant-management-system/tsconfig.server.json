@@ -17,7 +17,7 @@
     "noEmit": false,
     "verbatimModuleSyntax": false
   },
-  "include": ["db-init.ts", "db-connection.ts", "server.ts"],
+  "include": ["db-init.ts", "db-connection.ts", "server.ts", "backend/**/*.ts"],
   "exclude": ["node_modules", "src", "dist"],
   "ts-node": {
     "esm": true,
