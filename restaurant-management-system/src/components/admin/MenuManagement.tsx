@@ -40,6 +40,14 @@ const MenuManagement = () => {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const shouldLock = showModal || showCategoryModal;
+    document.body.classList.toggle("modal-open", shouldLock);
+    return () => {
+      document.body.classList.remove("modal-open");
+    };
+  }, [showModal, showCategoryModal]);
+
   const loadData = async () => {
     try {
       const items = await menuQueries.getAll();
@@ -183,8 +191,8 @@ const MenuManagement = () => {
   return (
     <div className="min-h-screen">
       <header className="header-main">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <button
               onClick={() => navigate("/admin")}
               className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-xl transition font-semibold flex items-center gap-2"
@@ -202,17 +210,17 @@ const MenuManagement = () => {
               <h1 className="text-2xl font-bold text-white">Menu Management</h1>
             </div>
           </div>
-          <div className="flex space-x-3">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto items-stretch sm:items-center justify-center sm:justify-end">
             <button
               onClick={() => setShowCategoryModal(true)}
-              className="btn-secondary px-5 py-2.5 rounded-xl transition-all duration-300 shadow-md font-semibold flex items-center gap-2"
+              className="btn-secondary px-6 py-2.5 rounded-xl transition font-semibold flex items-center justify-center gap-2 w-full sm:w-auto"
             >
               <FontAwesomeIcon icon={faFolder} />
               <span>Manage Categories</span>
             </button>
             <button
               onClick={() => setShowModal(true)}
-              className="btn-primary px-5 py-2.5 rounded-xl flex items-center gap-2"
+              className="btn-primary px-6 py-2.5 rounded-xl transition font-semibold flex items-center justify-center gap-2 w-full sm:w-auto"
             >
               <FontAwesomeIcon icon={faPlus} />
               <span>Add Item</span>
@@ -222,7 +230,7 @@ const MenuManagement = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="table-container">
+        <div className="table-container overflow-x-auto">
           <table className="table-modern">
             <thead>
               <tr>
@@ -271,25 +279,27 @@ const MenuManagement = () => {
                     ></span>
                     {item.available ? "Available" : "Unavailable"}
                   </td>
-                  <td className="space-x-2">
-                    <button
-                      onClick={() => handleEdit(item)}
-                      className="table-action-btn table-action-btn-edit"
-                    >
-                      <span className="inline-flex items-center gap-2">
-                        <FontAwesomeIcon icon={faPenToSquare} />
-                        <span>Edit</span>
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="table-action-btn table-action-btn-delete"
-                    >
-                      <span className="inline-flex items-center gap-2">
-                        <FontAwesomeIcon icon={faTrash} />
-                        <span>Delete</span>
-                      </span>
-                    </button>
+                  <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
+                      <button
+                        onClick={() => handleEdit(item)}
+                        className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg transition text-xs"
+                      >
+                        <span className="inline-flex items-center gap-2">
+                          <FontAwesomeIcon icon={faPenToSquare} />
+                          <span>Edit</span>
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg transition text-xs"
+                      >
+                        <span className="inline-flex items-center gap-2">
+                          <FontAwesomeIcon icon={faTrash} />
+                          <span>Del</span>
+                        </span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

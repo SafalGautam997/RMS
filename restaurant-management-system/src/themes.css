@@ -166,7 +166,9 @@
   background: var(--t-surface);
   border: 1px solid var(--t-border);
   border-radius: 12px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .theme-classy .table-modern thead,
@@ -233,6 +235,20 @@
 .theme-modern .badge-warning,
 .theme-vibrant .badge-warning {
   background: var(--t-warning);
+  color: var(--t-surface);
+}
+
+.theme-classy .badge-danger,
+.theme-modern .badge-danger,
+.theme-vibrant .badge-danger {
+  background: var(--t-error);
+  color: var(--t-surface);
+}
+
+.theme-classy .badge-info,
+.theme-modern .badge-info,
+.theme-vibrant .badge-info {
+  background: var(--t-accent);
   color: var(--t-surface);
 }
 

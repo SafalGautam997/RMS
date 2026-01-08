@@ -23,7 +23,7 @@ export async function initDb() {
         password TEXT NOT NULL,
         role TEXT NOT NULL CHECK(role IN ('Admin', 'Waiter')),
         party TEXT NOT NULL DEFAULT 'cafe and restaurents',
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT (datetime('now', '+5 hours', '+45 minutes'))
       )
     `);
     console.log("✓ Users table created");
@@ -33,7 +33,7 @@ export async function initDb() {
       CREATE TABLE IF NOT EXISTS categories (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL UNIQUE,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT (datetime('now', '+5 hours', '+45 minutes'))
       )
     `);
     console.log("✓ Categories table created");
@@ -48,7 +48,7 @@ export async function initDb() {
         stock INTEGER DEFAULT 1,
         available INTEGER DEFAULT 1,
         images TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        created_at DATETIME DEFAULT (datetime('now', '+5 hours', '+45 minutes')),
         FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
       )
     `);
@@ -65,8 +65,8 @@ export async function initDb() {
         subtotal DECIMAL(10, 2) DEFAULT 0,
         discount_amount DECIMAL(10, 2) DEFAULT 0,
         total_price DECIMAL(10, 2) DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        created_at DATETIME DEFAULT (datetime('now', '+5 hours', '+45 minutes')),
+        updated_at DATETIME DEFAULT (datetime('now', '+5 hours', '+45 minutes')),
         FOREIGN KEY (waiter_id) REFERENCES users(id) ON DELETE SET NULL
       )
     `);
@@ -94,7 +94,7 @@ export async function initDb() {
         type TEXT NOT NULL CHECK(type IN ('Percentage', 'Fixed')),
         value DECIMAL(10, 2) NOT NULL,
         active INTEGER DEFAULT 1,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT (datetime('now', '+5 hours', '+45 minutes'))
       )
     `);
     console.log("✓ Discounts table created");
@@ -106,7 +106,7 @@ export async function initDb() {
         order_id INTEGER NOT NULL,
         amount DECIMAL(10, 2) NOT NULL,
         payment_method TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        created_at DATETIME DEFAULT (datetime('now', '+5 hours', '+45 minutes')),
         FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
       )
     `);

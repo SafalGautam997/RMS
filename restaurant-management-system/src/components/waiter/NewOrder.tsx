@@ -144,8 +144,8 @@ const NewOrder = () => {
     <div className="min-h-screen">
       {/* Header */}
       <header className="header-main sticky top-0 z-40">
-        <div className="px-4 py-5 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
+        <div className="px-4 py-5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <button
               onClick={() => navigate("/waiter")}
               className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-xl transition font-semibold flex items-center gap-2"
@@ -159,7 +159,7 @@ const NewOrder = () => {
           </div>
           <button
             onClick={() => setShowCart(true)}
-            className="btn-primary relative px-5 py-2.5 rounded-xl"
+            className="btn-primary relative px-5 py-2.5 rounded-xl w-full sm:w-auto"
           >
             <span className="flex items-center gap-2">
               <FontAwesomeIcon icon={faCartShopping} />
@@ -179,7 +179,7 @@ const NewOrder = () => {
               </span>
               Select Table Number
             </h2>
-            <div className="flex space-x-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="number"
                 value={tableNumber}
@@ -189,7 +189,7 @@ const NewOrder = () => {
               />
               <button
                 onClick={handleSetTable}
-                className="btn-primary px-5 py-2.5 rounded-xl"
+                className="btn-primary px-5 py-2.5 rounded-xl w-full sm:w-auto"
               >
                 <span className="flex items-center gap-2">
                   <FontAwesomeIcon icon={faCheck} />

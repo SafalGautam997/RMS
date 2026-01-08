@@ -6,7 +6,6 @@ import { userQueries } from "../db/queries";
 import ThemeSwitcher from "./ThemeSwitcher";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faArrowLeft,
   faCrown,
   faLock,
   faTriangleExclamation,
@@ -52,7 +51,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse delay-700"></div>
@@ -125,12 +124,9 @@ const Login = () => {
                 setUsername("");
                 setPassword("");
               }}
-              className="mb-6 text-gray-600 hover:text-gray-800 flex items-center space-x-2 transition"
+              className="mb-6 btn-secondary px-5 py-2.5 rounded-xl transition font-semibold inline-flex items-center justify-center"
             >
-              <span>
-                <FontAwesomeIcon icon={faArrowLeft} />
-              </span>
-              <span>Back to selection</span>
+              <span>Back</span>
             </button>
 
             <div className="text-center mb-6">

@@ -105,7 +105,7 @@ app.post("/api/users", async (req: Request, res: Response) => {
     const { name, username, password, role, party } = req.body;
     const db = await getDB();
     const result = await db.run(
-      "INSERT INTO users (name, username, password, role, party) VALUES (?, ?, ?, ?, ?)",
+      "INSERT INTO users (name, username, password, role, party, created_at) VALUES (?, ?, ?, ?, ?, datetime('now', '+5 hours', '+45 minutes'))",
       [name, username, password, role, party || "cafe and restaurents"]
     );
     res.json({ lastID: result.lastID, changes: result.changes });
@@ -141,9 +141,10 @@ app.post("/api/categories", async (req: Request, res: Response) => {
   try {
     const { name } = req.body;
     const db = await getDB();
-    const result = await db.run("INSERT INTO categories (name) VALUES (?)", [
-      name,
-    ]);
+    const result = await db.run(
+      "INSERT INTO categories (name, created_at) VALUES (?, datetime('now', '+5 hours', '+45 minutes'))",
+      [name]
+    );
     res.json({ lastID: result.lastID, changes: result.changes });
   } catch (error) {
     res.status(500).json({ error: "Database error" });
@@ -202,7 +203,7 @@ app.post("/api/menu", async (req: Request, res: Response) => {
     });
     const db = await getDB();
     const result = await db.run(
-      "INSERT INTO menu_items (name, price, category_id, stock, images) VALUES (?, ?, ?, ?, ?)",
+      "INSERT INTO menu_items (name, price, category_id, stock, images, created_at) VALUES (?, ?, ?, ?, ?, datetime('now', '+5 hours', '+45 minutes'))",
       [name, price, categoryId, stock, imageUrl || null]
     );
     res.json({ lastID: result.lastID, changes: result.changes });
@@ -325,7 +326,7 @@ app.post("/api/orders", async (req: Request, res: Response) => {
     const waiterName = waiter ? waiter.name : null;
 
     const result = await db.run(
-      "INSERT INTO orders (table_number, waiter_id, waiter_name, status, subtotal, discount_amount, total_price) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO orders (table_number, waiter_id, waiter_name, status, subtotal, discount_amount, total_price, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now', '+5 hours', '+45 minutes'), datetime('now', '+5 hours', '+45 minutes'))",
       [
         tableNumber,
         waiterId,
@@ -348,7 +349,7 @@ app.put("/api/orders/:id/status", async (req: Request, res: Response) => {
     const { status } = req.body;
     const db = await getDB();
     const result = await db.run(
-      "UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+      "UPDATE orders SET status = ?, updated_at = datetime('now', '+5 hours', '+45 minutes') WHERE id = ?",
       [status, id]
     );
     res.json({ changes: result.changes });
@@ -363,7 +364,7 @@ app.put("/api/orders/:id", async (req: Request, res: Response) => {
     const { subtotal, discountAmount, totalPrice } = req.body;
     const db = await getDB();
     const result = await db.run(
-      "UPDATE orders SET subtotal = ?, discount_amount = ?, total_price = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+      "UPDATE orders SET subtotal = ?, discount_amount = ?, total_price = ?, updated_at = datetime('now', '+5 hours', '+45 minutes') WHERE id = ?",
       [subtotal, discountAmount, totalPrice, id]
     );
     res.json({ changes: result.changes });
@@ -459,7 +460,7 @@ app.post("/api/discounts", async (req: Request, res: Response) => {
     const { name, type, value } = req.body;
     const db = await getDB();
     const result = await db.run(
-      "INSERT INTO discounts (name, type, value) VALUES (?, ?, ?)",
+      "INSERT INTO discounts (name, type, value, created_at) VALUES (?, ?, ?, datetime('now', '+5 hours', '+45 minutes'))",
       [name, type, value]
     );
     res.json({ lastID: result.lastID, changes: result.changes });
@@ -541,7 +542,7 @@ app.post("/api/transactions", async (req: Request, res: Response) => {
     const { orderId, amount, paymentMethod } = req.body;
     const db = await getDB();
     const result = await db.run(
-      "INSERT INTO transactions (order_id, amount, payment_method) VALUES (?, ?, ?)",
+      "INSERT INTO transactions (order_id, amount, payment_method, created_at) VALUES (?, ?, ?, datetime('now', '+5 hours', '+45 minutes'))",
       [orderId, amount, paymentMethod]
     );
     res.json({ lastID: result.lastID, changes: result.changes });

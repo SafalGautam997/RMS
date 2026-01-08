@@ -15,7 +15,7 @@ async function getOrCreateOnlineWaiterId(): Promise<number> {
   if (existing?.id) return existing.id;
 
   const result = await db.run(
-    "INSERT INTO users (name, username, password, role, party) VALUES (?, ?, ?, ?, ?)",
+    "INSERT INTO users (name, username, password, role, party, created_at) VALUES (?, ?, ?, ?, ?, datetime('now', '+5 hours', '+45 minutes'))",
     [
       "Online Orders",
       ONLINE_WAITER_USERNAME,
@@ -106,7 +106,7 @@ export async function createPublicOrder(
     const waiterName = waiter?.name ?? "Online Orders";
 
     const orderResult = await db.run(
-      "INSERT INTO orders (table_number, waiter_id, waiter_name, status, subtotal, discount_amount, total_price) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO orders (table_number, waiter_id, waiter_name, status, subtotal, discount_amount, total_price, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now', '+5 hours', '+45 minutes'), datetime('now', '+5 hours', '+45 minutes'))",
       [
         tableNumber,
         waiterId,

@@ -225,29 +225,29 @@ const AllOrders = () => {
           </div>
 
           <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex flex-wrap gap-2">
-              {["All", "Pending", "Served", "Paid"].map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setFilter(status)}
-                  className={`px-4 py-2 rounded-lg transition ${
-                    filter === status
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                >
-                  {status}
-                </button>
-              ))}
+            <div className="w-full md:w-auto overflow-x-auto">
+              <div className="flex gap-2 pb-1 whitespace-nowrap">
+                {["All", "Pending", "Served", "Paid"].map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => setFilter(status)}
+                    className={`px-6 py-2.5 rounded-xl transition font-semibold ${
+                      filter === status ? "btn-primary" : "btn-secondary"
+                    }`}
+                  >
+                    {status}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 items-center">
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
               <select
                 value={filterType}
                 onChange={(e) =>
                   setFilterType(e.target.value as "day" | "month" | "year")
                 }
-                className="form-select px-4 py-2 rounded-lg"
+                className="form-select px-4 py-2 rounded-lg w-full sm:w-auto"
               >
                 <option value="day">Day</option>
                 <option value="month">Month</option>
@@ -263,13 +263,13 @@ const AllOrders = () => {
                 }
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
-                className="form-input px-4 py-2 rounded-lg"
+                className="form-input px-4 py-2 rounded-lg w-full sm:w-auto"
                 placeholder={`Filter by ${filterType}`}
               />
               {dateFilter && (
                 <button
                   onClick={() => setDateFilter("")}
-                  className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
+                  className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 w-full sm:w-auto"
                 >
                   Clear
                 </button>

@@ -371,21 +371,20 @@
 }
 
 .cart-items-scroll::-webkit-scrollbar {
-  width: 6px;
+  width: 0;
+  height: 0;
 }
 
 .cart-items-scroll::-webkit-scrollbar-track {
-  background: #f3f4f6;
-  border-radius: 10px;
+  background: transparent;
 }
 
 .cart-items-scroll::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 10px;
+  background: transparent;
 }
 
 .cart-items-scroll::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: transparent;
 }
 
 .cart-total {
@@ -551,10 +550,12 @@
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(8px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 9999;
   animation: fadeIn 0.3s ease;
+  padding: 16px;
+  overflow-y: auto;
 }
 
 .modal-box {
@@ -562,7 +563,7 @@
   border-radius: 24px;
   padding: 40px;
   max-width: 600px;
-  width: 90%;
+  width: min(600px, calc(100vw - 32px));
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);

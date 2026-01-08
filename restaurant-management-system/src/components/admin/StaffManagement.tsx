@@ -29,6 +29,13 @@ const StaffManagement = () => {
     loadStaff();
   }, []);
 
+  useEffect(() => {
+    document.body.classList.toggle("modal-open", showModal);
+    return () => {
+      document.body.classList.remove("modal-open");
+    };
+  }, [showModal]);
+
   const loadStaff = async () => {
     try {
       const users = await userQueries.getAll();
@@ -81,8 +88,8 @@ const StaffManagement = () => {
   return (
     <div className="min-h-screen">
       <header className="header-main">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <button
               onClick={() => navigate("/admin")}
               className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-xl transition font-semibold flex items-center gap-2"
@@ -99,7 +106,7 @@ const StaffManagement = () => {
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="btn-primary px-6 py-2.5 rounded-xl transition font-semibold flex items-center gap-2"
+            className="btn-primary px-6 py-2.5 rounded-xl transition font-semibold flex items-center gap-2 w-full sm:w-auto"
           >
             <FontAwesomeIcon icon={faPlus} />
             <span>Add Staff</span>

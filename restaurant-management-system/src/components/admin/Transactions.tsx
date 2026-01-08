@@ -27,6 +27,13 @@ const Transactions = () => {
     loadTransactions();
   }, []);
 
+  useEffect(() => {
+    document.body.classList.toggle("modal-open", showEditModal);
+    return () => {
+      document.body.classList.remove("modal-open");
+    };
+  }, [showEditModal]);
+
   const loadTransactions = async () => {
     try {
       const allTransactions = await transactionQueries.getAll();
@@ -78,8 +85,8 @@ const Transactions = () => {
   return (
     <div className="min-h-screen">
       <header className="header-main">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <button
               onClick={() => navigate("/admin")}
               className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-xl transition font-semibold inline-flex items-center gap-2"
@@ -93,7 +100,7 @@ const Transactions = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="table-container overflow-hidden">
+        <div className="table-container overflow-x-auto">
           <table className="table-modern min-w-full divide-y divide-gray-200">
             <thead>
               <tr>

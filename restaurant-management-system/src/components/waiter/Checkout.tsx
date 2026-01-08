@@ -173,8 +173,8 @@ const Checkout = () => {
   return (
     <div className="min-h-screen">
       <header className="header-main">
-        <div className="px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
+        <div className="px-4 py-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <button
               onClick={() => navigate("/waiter/new-order")}
               className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-xl transition font-semibold inline-flex items-center gap-2"
